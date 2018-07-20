@@ -1,15 +1,10 @@
 package com.fintecher.file.service.impl;
 
-import com.fintecher.common.entity.file.UploadFile;
-import com.fintecher.common.entity.message.ProgressMessage;
-import com.fintecher.common.entity.message.UnReduceFileMessage;
+import com.fintecher.entity.file.UploadFile;
 import com.fintecher.file.repository.UploadFileRepository;
 import com.fintecher.file.service.UploadFileCridFsService;
-import com.fintecher.util.ShortUUID;
-import com.fintecher.util.UnReduceFile;
 import com.fintecher.util.ZWDateUtil;
 import com.mongodb.gridfs.GridFSDBFile;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,8 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
-import java.util.List;
-import java.util.Objects;
 
 /**
  * @Author: jwdstef

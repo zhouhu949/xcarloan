@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.fintecher.manage.mapper.SysRoleExceptOrgMapper">
+
+    <!--获取角色排除的机构权限-->
+    <select id="findRoleExceptOrg" parameterType="java.lang.Long" resultType="com.fintecher.manage.vo.RoleOrgModel">
+      SELECT
+      ro.id AS id,
+      so.org_name AS orgName
+      FROM sys_role_except_orgs ro
+      LEFT JOIN sys_org so ON ro.org_id = so.id
+      WHERE role_id = #{roleId}
+    </select>
+</mapper>

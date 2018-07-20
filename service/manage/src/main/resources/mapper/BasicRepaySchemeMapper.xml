@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.BasicRepaySchemeMapper">
+
+    <!--获取数据权限下的还款方案-->
+    <select id="findAllBasicRepaySchemeByAuth" parameterType="map" resultType="com.fintecher.manage.vo.BasicRepayMenuModel">
+        SELECT
+        scheme.id AS id,
+        scheme.scheme_name AS schemeName
+        FROM basic_repay_scheme scheme
+        LEFT JOIN sys_org org ON scheme.org_id = org.id
+        <where>
+            <if test="dataAuth != null">
+                <foreach collection="dataAuth" item="item" open="AND (" close=")" separator="OR">
+                    org.org_tree_code LIKE CONCAT(#{item}, '%')
+                </foreach>
+            </if>
+            <if test="exceptDataAuth != null">
+                <foreach collection="exceptDataAuth" item="item" open="AND (" close=")" separator="AND">
+                    org.org_tree_code NOT LIKE CONCAT(#{item}, '%')
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <select id="findRepaySchemeExpenseCode" parameterType="java.lang.Long" resultType="java.lang.String">
+        SELECT (SELECT expense_code FROM basic_expense WHERE id = expense.expense_id) AS expense_code
+        FROM basic_repay_scheme_expense expense
+        WHERE expense.scheme_id = #{schemeId}
+    </select>
+
+    <select id="findSchemeInfo" parameterType="java.lang.Long" resultType="com.fintecher.manage.vo.SchemeInfoModel">
+        SELECT
+        scheme.id AS id,
+        scheme.scheme_name AS schemeName,
+        scheme.offset_id AS offsetId,
+        offset.offset_name AS offsetName,
+        scheme.scheme_type AS schemeType,
+        scheme.repay_type AS repayType,
+        scheme.mortgage_type AS mortgageType,
+        scheme.scheme_status AS schemeStatus,
+        scheme.remark AS remark,
+        scheme.credit_days AS creditDays,
+        scheme.overdue_days AS overdueDays,
+        scheme.periods AS periods,
+        scheme.interest_rate AS interestRate,
+        scheme.cycle_type AS cycleType,
+        scheme.money_min AS moneyMin,
+        scheme.money_max AS moneyMax,
+        scheme.account_period_type AS accountPeriodType,
+        scheme.account_day AS accountDay,
+        scheme.work_flow_key AS workFlowKey
+        FROM basic_repay_scheme scheme
+        LEFT JOIN basic_offset offset ON scheme.offset_id = offset.id
+        WHERE scheme.id = #{schemeId}
+    </select>
+
+    <resultMap id="schemeAndExpenseInfo" type="com.fintecher.manage.vo.SchemeAndExpenseInfo">
+        <id column="schemeId" property="schemeId"/>
+        <result column="schemeName" property="schemeName"/>
+        <result column="schemeType" property="schemeType"/>
+        <result column="repayType" property="repayType"/>
+        <result column="periods" property="periods"/>
+        <result column="interestRate" property="interestRate"/>
+        <result column="accountDay" property="accountDay"/>
+        <collection property="schemeExpenseModelList" ofType="com.fintecher.manage.vo.RepaySchemeExpenseModel" select="selectSchemeExpense" column="schemeId">
+        </collection>
+    </resultMap>
+
+    <select id="findSchemeAndExpenseInfo" parameterType="java.lang.Long" resultMap="schemeAndExpenseInfo">
+        SELECT
+        scheme.id AS schemeId,
+        scheme.scheme_name AS schemeName,
+        scheme.scheme_type AS schemeType,
+        scheme.repay_type AS repayType,
+        scheme.periods AS periods,
+        scheme.interest_rate AS interestRate,
+        scheme.account_day AS accountDay
+        FROM basic_repay_scheme scheme
+        WHERE scheme.id = #{schemeId}
+    </select>
+
+    <select id="selectSchemeExpense" parameterType="java.lang.Long" resultType="com.fintecher.manage.vo.RepaySchemeExpenseModel">
+        SELECT
+        se.id as id,
+        e.id AS expenseId,
+        e.expense_name AS expenseName,
+        e.expense_code AS expenseCode,
+        se.is_first AS isFirst,
+        se.repay_proportion AS repayProportion,
+        se.fixed_cost AS fixedCost,
+        se.repay_type AS repayType,
+        se.is_last AS isLast,
+        se.is_refund AS isRefund
+        FROM basic_repay_scheme_expense se
+        LEFT JOIN basic_expense e ON se.expense_id = e.id
+        WHERE se.scheme_id = #{schemeId}
+    </select>
+    <select id="getEarlySettlementScheme" parameterType="Map" resultType="com.fintecher.manage.vo.RepaySchemeExpenseModel">
+        SELECT
+	brse.id AS id,
+	brse.scheme_id AS schemeId,
+	brse.expense_id AS expenseId,
+	brse.is_first AS expenseId,
+	brse.repay_proportion AS repayProportion,
+	brse.fixed_cost AS fixedCost,
+	brse.repay_type AS repayType,
+	brse.is_last AS isLast,
+	brse.is_refund AS isRefund
+FROM
+	basic_repay_scheme_expense brse
+	LEFT JOIN basic_expense expense ON expense.id = brse.expense_id
+WHERE
+	brse.scheme_id = #{schemeId} AND expense.expense_code = #{expenseCode}
+    </select>
+
+</mapper>

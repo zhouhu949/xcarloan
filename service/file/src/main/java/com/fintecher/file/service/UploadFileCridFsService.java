@@ -1,10 +1,8 @@
 package com.fintecher.file.service;
 
-import com.fintecher.common.entity.file.UploadFile;
+import com.fintecher.entity.file.UploadFile;
 import com.mongodb.gridfs.GridFSDBFile;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.InputStream;
 
 /**
  * @Author: jwdstef

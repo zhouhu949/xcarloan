@@ -1,5 +1,6 @@
 package com.fintecher.gateway;
 
+import com.fintecher.gateway.filter.AuthFilter;
 import com.fintecher.gateway.filter.CheckCorsFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -35,10 +36,11 @@ public class GateApplication {
         SpringApplication.run(GateApplication.class, args);
     }
 
-    //    @Bean
-//    public AuthFilter accessFilter() {
-//        return new AuthFilter();
-//    }
+    @Bean
+    public AuthFilter accessFilter() {
+        return new AuthFilter();
+    }
+
     @Autowired
     private MultipartProperties multipartProperties;
 

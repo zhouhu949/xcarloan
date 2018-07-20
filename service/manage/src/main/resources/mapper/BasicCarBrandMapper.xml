@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.BasicCarBrandMapper">
+<select id="queryCarBrandInfo" resultType="com.fintecher.entity.BasicCarBrand">
+   SELECT a.id,
+   a.dept_id as deptId,
+   a.operator as operator,
+   a.operator_time as operatorTime,
+   a.org_id as orgId,
+   a.brand_code as brandCode,
+   a.brand_name as brandName,
+   a.brand_photo_url as brandPhoneUrl,
+   a.dept_id as deptId
+    FROM basic_car_brand a
+    LEFT JOIN basic_car_brand_series b
+    ON b.brand_id = a.id where b.id = #{id}
+</select>
+    <select id="selectByCustomerId" parameterType="com.fintecher.entity.BasicCustomerBank" resultType="com.fintecher.entity.BasicCustomerBank">
+        select id from basic_customer_bank where customer_id={customerId} and account_status#{accountStatus} limit 1
+    </select>
+</mapper>

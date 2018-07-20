@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.BasicEnterShellSaveMapper">
+    <select id="getOutSideList" resultType="com.fintecher.manage.vo.BasicEnterShellSaveParams">
+
+        SELECT
+        bco.id AS orderId,
+        bco.order_no AS orderNo,
+        boc.order_car_name AS modelName,
+        bsc.stock_car_color AS modelColors,
+        bc.customer_name AS customerName,
+        bsc.stock_status AS stockStatus,
+        boc.id AS ordermodelId,
+        bcm.id AS modelId,
+        boc.stock_id as stockId,
+        bsc.stock_price AS stockPrice
+        FROM basic_customer_order bco
+        LEFT JOIN basic_order_car boc ON bco.id = boc.order_id
+        LEFT JOIN basic_stock_car bsc ON boc.stock_id = bsc.id
+        LEFT JOIN basic_car_model bcm ON boc.model_id = bcm.id
+        LEFT JOIN basic_customer bc ON bc.id = bco.customer_id
+        LEFT JOIN sys_org so ON SO.id = bco.org_id
+        WHERE boc.is_supplier = 10002
+        <if test="allDataAuth != null">
+            <foreach collection="allDataAuth" item="item" open="AND (" close=")" separator="OR">
+                AND org.org_tree_code LIKE CONCAT(#{item}, '%')
+            </foreach>
+        </if>
+        <if test="allExceptDataAuth != null">
+            <foreach collection="allExceptDataAuth" item="item" open="AND (" close=")" separator="AND">
+                AND org.org_tree_code NOT LIKE CONCAT(#{item}, '%')
+            </foreach>
+        </if>
+
+        <if test="orderNo != null and orderNo != ''">
+            AND bco.order_no LIKE CONCAT('%',#{orderNo},'%')
+        </if>
+        <if test="customerName != null and customerName != ''">
+            AND bc.customer_name LIKE CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="stockStatus != null and stockStatus != ''">
+            AND bsc.stock_status = #{stockStatus}
+        </if>
+
+
+    </select>
+
+
+    <select id="getOrderCarById" resultType="com.fintecher.manage.vo.BasicGetOrderCarDetil">
+        SELECT
+        bc.customer_name AS customerName,
+        boc.order_car_name AS modelName,
+        boc.order_car_color AS modelColors,
+        boc.order_car_param_desc AS orderCarParamDesc,
+        boc.order_car_desc AS orderCarDesc,
+        bsc.stock_price AS stockPrice,
+        bsc.stock_engine_no AS stockEngineNo ,
+        bsc.stock_car_no AS stockCarNo,
+        bs.supplier_name AS supplierName
+        FROM basic_customer_order bco
+        LEFT JOIN basic_order_car boc ON bco.id = boc.order_id
+        LEFT JOIN basic_stock_car bsc ON boc.stock_id = bsc.id
+        LEFT JOIN basic_supplier bs ON bs.id = bsc.supplier_id
+        LEFT JOIN basic_car_model bcm ON boc.model_id = bcm.id
+        LEFT JOIN basic_customer bc ON bc.id = bco.customer_id
+        WHERE boc.is_supplier = 10002
+        AND bco.id =#{id}
+
+    </select>
+</mapper>

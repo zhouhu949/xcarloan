@@ -1,17 +1,17 @@
 package com.fintecher.file.web;
 
-import com.fintecher.common.entity.file.UploadFile;
-import com.fintecher.common.entity.message.ImportFileUploadSuccessMessage;
+import com.fintecher.entity.file.UploadFile;
+import com.fintecher.entity.message.ImportFileUploadSuccessMessage;
 import com.fintecher.file.model.UnZipCaseFileRequest;
 import com.fintecher.file.repository.UploadFileRepository;
 import com.fintecher.file.service.UploadFileCridFsService;
+import com.fintecher.util.Constants;
 import com.fintecher.web.HeaderUtil;
 import com.google.common.collect.Lists;
 import com.mongodb.gridfs.GridFSDBFile;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import org.apache.catalina.User;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -26,7 +26,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -55,7 +54,7 @@ public class FileUploadController {
     @ResponseBody
     @ApiOperation(value = "Grid方式上传文件", notes = "返回JSON data 为UploadFile 对象")
     ResponseEntity<UploadFile> uploadFileGrid(@RequestParam("file") MultipartFile file,
-                                              @RequestHeader(value = "authorization") String authorization) throws Exception {
+                                              @RequestHeader(value = Constants.AUTHORIZATION) String authorization) throws Exception {
         try {
             if (Objects.isNull(file)) {
                 throw new RuntimeException("MultipartFile是空的");
@@ -73,7 +72,7 @@ public class FileUploadController {
     @ResponseBody
     @ApiOperation(value = "上传压缩文件，后台进行解压缩", notes = "返回的为文件记录对象")
     public ResponseEntity<UploadFile> unZipCaseFile(@RequestBody UnZipCaseFileRequest request,
-                                                    @RequestHeader(value = "authorization") String authorization) throws Exception {
+                                                    @RequestHeader(value = Constants.AUTHORIZATION) String authorization) throws Exception {
         if (StringUtils.isBlank(request.getUploadFile())) {
             return ResponseEntity.badRequest().headers(HeaderUtil.createAlert("文件是空的", "")).body(null);
         }

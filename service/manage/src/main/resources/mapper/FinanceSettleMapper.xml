@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.FinanceSettleMapper">
+    <select id="selectExpense" parameterType="java.lang.Long" resultType="Map">
+        SELECT DISTINCT
+            expense_code AS expenseCode
+            expense_Name AS expenseName
+        FROM
+            basic_order_repay_scheme
+        WHERE
+            order_id =#{orderId}
+    </select>
+    <select id="selectOrderRepaySchemeInfo" parameterType="Map" resultType="Map">
+   SELECT
+	a.periods
+	<foreach collection="keyList" item="item" index="index">
+	,Max( CASE a.expense_code WHEN #{item.expenseCode} THEN a.repay_money ELSE 0 END ) AS #{item.expenseCode}
+    </foreach>
+    ,sum( CASE '合计' WHEN '合计' THEN a.repay_money ELSE 0 END ) AS '合计',
+    sum( CASE '已还金额' WHEN '已还金额' THEN a.is_repay_money ELSE 0 END ) AS '已还金额'
+        FROM
+	basic_order_repay_scheme a
+	INNER JOIN basic_expense b ON a.expense_id = b.id
+WHERE
+	a.order_id = #{orderId}
+GROUP BY
+	a.periods
+    </select>
+
+    <!--<select id="selectOrderRepayScheme" resultType="Map" parameterType="java.lang.Long">-->
+      <!--select-->
+         <!--periods,-->
+         <!--expense_code AS expenseCode,-->
+         <!--expense_Name AS expenseName,-->
+         <!--is_repay_money as isRepayMoney,-->
+         <!--repay_money AS repay_money,-->
+         <!--sum(repay_money-ifnull(is_repay_money,0)),-->
+        <!--from basic_order_repay_scheme-->
+        <!--group-->
+        <!--periods,expense_code,expense_Name,is_repay_money,repay_money-->
+
+    <!--</select>-->
+</mapper>

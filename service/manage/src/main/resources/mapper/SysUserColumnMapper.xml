@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.fintecher.manage.mapper.SysUserColumnMapper">
+
+    <!--批量更新用户列配置-->
+    <update id="updateBatchUserColumn" parameterType="java.util.List">
+        UPDATE sys_user_column
+        <trim prefix="SET" suffixOverrides=",">
+            <trim prefix="column_check =case" suffix="end,">
+                <foreach collection="params" item="item" index="index">
+                    WHEN id=#{item.id} THEN #{item.columnCheck}
+                </foreach>
+            </trim>
+            <trim prefix="column_sort =case" suffix="end,">
+                <foreach collection="params" item="item" index="index">
+                    WHEN id=#{item.id} THEN #{item.columnSort}
+                </foreach>
+            </trim>
+            <trim prefix="operator =case" suffix="end,">
+                <foreach collection="params" item="item" index="index">
+                    WHEN id=#{item.id} THEN #{item.operator}
+                </foreach>
+            </trim>
+            <trim prefix="operator_time =case" suffix="end,">
+                <foreach collection="params" item="item" index="index">
+                    WHEN id=#{item.id} THEN #{item.operatorTime}
+                </foreach>
+            </trim>
+        </trim>
+        WHERE id IN
+        <foreach collection="params" index="index" item="item"
+                 separator="," open="(" close=")">
+            #{item.id,jdbcType=BIGINT}
+        </foreach>
+    </update>
+</mapper>

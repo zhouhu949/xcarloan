@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @Author: jwdstef
@@ -63,38 +64,44 @@ public class AuthFilter extends ZuulFilter {
     public Object run() {
         RequestContext ctx = RequestContext.getCurrentContext();
         HttpServletRequest request = ctx.getRequest();
-        logger.info(String.format("%s request to %s", request.getMethod(), request.getRequestURL().toString()));
+        logger.debug(String.format("%s request to %s", request.getMethod(), request.getRequestURL().toString()));
 
-        if (StringUtils.contains(request.getRequestURL().toString(), "/api/companyController")
-                || StringUtils.containsIgnoreCase(request.getRequestURL().toString(), "getAllCompany")
-                || StringUtils.containsIgnoreCase(request.getRequestURL().toString(), "fileUploadController/view")) {
+        if (StringUtils.containsIgnoreCase(request.getRequestURL().toString(), "fileUploadController/view")
+                || StringUtils.containsIgnoreCase(request.getRequestURI(), "fileUploadController/uploadFileGrid")) {
             return null;
         }
         if (StringUtils.contains(request.getRequestURL().toString(), "login/login")
-                || StringUtils.contains(request.getRequestURL().toString(), "login/developLogin")
+                || StringUtils.contains(request.getRequestURL().toString(), "login/devLogin")
                 || StringUtils.contains(request.getRequestURL().toString(), "swagger")
                 || StringUtils.contains(request.getRequestURL().toString(), "api-docs")
                 || StringUtils.containsIgnoreCase(request.getRequestURL().toString(), "HashCode")
-                || StringUtils.containsIgnoreCase(request.getRequestURL().toString(), "resourceController")
-                || StringUtils.containsIgnoreCase(request.getRequestURL().toString(), "dataDictController")) {
+                || StringUtils.containsIgnoreCase(request.getRequestURL().toString(), "sysDictController")) {
+            return null;
+        }
+
+        // 放开工作流调用的接口
+        if (StringUtils.contains(request.getRequestURI(), "/wf/workFlowResource")) {
             return null;
         }
 
         //从header中得到token
         String token = request.getHeader("authorization");
-        ResponseEntity<Boolean> responseEntity = restTemplate.getForEntity("http://service-manage/login/checkToken?token=" + token, Boolean.class);
-        if (!responseEntity.hasBody()) {
-            throw new RuntimeException("token验证异常");
-        }
-        boolean flag = responseEntity.getBody().booleanValue();
-        if (!flag) {
-            //认证失败
+        try {
+            ResponseEntity<Boolean> responseEntity = restTemplate.getForEntity("http://service-manage/loginResource/checkToken?token=" + token, Boolean.class);
+            if (!responseEntity.hasBody() || !responseEntity.getBody()) {
+                //认证失败
+                logger.error("token验证失败");
+                ctx.setSendZuulResponse(false);
+                ctx.setResponseStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+                return null;
+            }
+        } catch (RuntimeException e) {
             logger.error("token验证失败");
             ctx.setSendZuulResponse(false);
-            ctx.setResponseStatusCode(403);
+            ctx.setResponseStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
             return null;
         }
-        logger.info("token验证成功");
+        logger.debug("token验证成功");
         return null;
     }
 }

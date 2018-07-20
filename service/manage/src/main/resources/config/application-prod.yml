@@ -31,6 +31,12 @@ mybatis:
     basepackage: com.fintecher.manage.mapper
     xmlLocation: classpath:mapper/**/*.xml
 
+mapper:
+    mappers:
+      - com.fintecher.manage.util.MyMapper
+    not-empty: false
+    identity: MYSQL
+
 eureka:
   instance:
     statusPageUrlPath: /info
@@ -45,3 +51,12 @@ security:
   user:
     name: user
     password: ${REGISTRY_SERVER_PASSWORD:password}
+
+
+# 工作流接口
+workFlow:
+  api:
+    start: http://localhost:8080/wf/api/process/start
+    next: http://localhost:8080/wf/api/process/next
+    queryTasks: http://localhost:8080/wf/api/process/queryTasks
+    end: http://localhost:8080/wf/api/process/task/endtask

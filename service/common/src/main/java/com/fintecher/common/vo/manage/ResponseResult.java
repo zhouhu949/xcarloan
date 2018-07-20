@@ -86,4 +86,7 @@ public class ResponseResult<T> implements Serializable {
                 ", object=" + object +
                 '}';
     }
+
+    public static final String ERROR_MSG_USER_NOT_LOGIN_IN = "用户未登录，请重新登录";
+    public static final String ERROR_MSG_SYSTEM_ERROR = "系统错误，请联系管理员";
 }

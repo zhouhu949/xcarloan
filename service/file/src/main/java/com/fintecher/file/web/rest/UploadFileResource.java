@@ -1,7 +1,7 @@
 package com.fintecher.file.web.rest;
 
 
-import com.fintecher.common.entity.file.UploadFile;
+import com.fintecher.entity.file.UploadFile;
 import com.fintecher.file.repository.UploadFileRepository;
 import com.fintecher.file.service.UploadFileCridFsService;
 import com.google.common.collect.Lists;

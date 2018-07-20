@@ -1,6 +1,6 @@
 package com.fintecher.file.repository;
 
-import com.fintecher.common.entity.file.UploadFile;
+import com.fintecher.entity.file.UploadFile;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 

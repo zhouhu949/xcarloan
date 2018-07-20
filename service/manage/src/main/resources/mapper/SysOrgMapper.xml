@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.fintecher.manage.mapper.OrganizationMapper">
+    <select id="findSysOrg" resultType="com.fintecher.entity.SysOrg">
+        SELECT T2.id AS id, T2.org_name AS OrgName, T2.org_type AS orgType
+        FROM (
+        SELECT
+        @r AS _id,
+        (SELECT @r := org_pid FROM sys_org WHERE id = _id) AS parent_id
+        FROM
+        (SELECT @r := #{orgId}) vars,
+        sys_org h
+        WHERE @r != 0) T1
+        JOIN sys_org T2
+        ON T1._id = T2.id
+        WHERE T2.org_type != #{orgType}
+        ORDER BY T2.org_level DESC LIMIT 1
+    </select>
+
+    <!--获取数据权限下所有的组织机构-->
+    <select id="findAllOrganizationByAuth" parameterType="map" resultType="com.fintecher.entity.SysOrg">
+        SELECT
+        org.org_name AS orgName,
+        org.id AS id,
+        org.org_pid AS orgPid,
+        org.org_type AS orgType,
+        org.org_tree_code AS orgTreeCode,
+        org.org_level AS orgLevel,
+        org.org_status AS orgStatus
+        FROM sys_org org
+        <where>
+            <if test="dataAuth != null">
+                <foreach collection="dataAuth" item="item" open="AND (" close=")" separator="OR">
+                    org.org_tree_code LIKE CONCAT(#{item}, '%')
+                </foreach>
+            </if>
+            <if test="exceptDataAuth != null">
+                <foreach collection="exceptDataAuth" item="item" open="AND (" close=")" separator="AND">
+                    org.org_tree_code NOT LIKE CONCAT(#{item}, '%')
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+
+    <select id="queryAllOrg" resultType="com.fintecher.manage.vo.WFOrgModel">
+        SELECT
+        id AS orgId,
+        org_name AS orgName,
+        org_type AS orgType,
+        org_pid AS orgPid,
+        org_tree_code AS orgTreeCode,
+        org_level AS orgLevel,
+        org_status AS orgStatus,
+        org_remark AS orgRemark
+        FROM sys_org
+        <where>
+            <if test="orgName != null and orgName != ''">
+                AND org_name LIKE CONCAT('%', #{orgName}, '%')
+            </if>
+            <if test="orgStatus != null">
+                AND org_status = #{orgStatus}
+            </if>
+        </where>
+    </select>
+</mapper>

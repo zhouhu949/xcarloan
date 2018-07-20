@@ -6,7 +6,7 @@ spring:
     application:
         name: service-manage
     profiles:
-        active: dev
+        active: @profileActive@
     jackson:
         #date-format: yyyy-MM-dd HH:mm:ss
         serialization.indent_output: true
@@ -51,7 +51,7 @@ spring:
 #        config:
 #          uri: http://localhost:8060
 server:
-    port: 9002
+    port: 9001
     session:
         cookie:
             http-only: true

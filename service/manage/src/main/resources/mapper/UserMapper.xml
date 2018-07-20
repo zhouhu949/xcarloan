@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.fintecher.manage.mapper.UserMapper">
+
+    <resultMap id="userResultMap" type="com.fintecher.entity.SysUser">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="user_type" property="userType" jdbcType="INTEGER"/>
+        <result column="trial_time" property="trialTime" jdbcType="INTEGER"/>
+        <result column="login_type" property="loginType" jdbcType="INTEGER"/>
+        <result column="login_device" property="loginDevice" jdbcType="INTEGER"/>
+        <result column="login_address" property="loginAddress" jdbcType="VARCHAR"/>
+        <result column="password_time" property="passwordTime" jdbcType="TIMESTAMP"/>
+        <result column="dept_id" property="deptId" jdbcType="BIGINT"/>
+        <result column="message_pushid" property="messagePushid" jdbcType="VARCHAR"/>
+        <result column="user_username" property="userUsername" jdbcType="VARCHAR"/>
+        <result column="user_realname" property="userRealname" jdbcType="VARCHAR"/>
+        <result column="user_password" property="userPassword" jdbcType="VARCHAR"/>
+        <result column="user_sex" property="userSex" jdbcType="INTEGER"/>
+        <result column="user_phone" property="userPhone" jdbcType="VARCHAR"/>
+        <result column="user_email" property="userEmail" jdbcType="VARCHAR"/>
+        <result column="user_status" property="userStatus" jdbcType="INTEGER"/>
+        <result column="user_signature" property="userSignature" jdbcType="VARCHAR"/>
+        <result column="user_remark" property="userRemark" jdbcType="VARCHAR"/>
+        <result column="user_photo" property="userPhoto" jdbcType="VARCHAR"/>
+        <result column="operator" property="operator" jdbcType="BIGINT"/>
+        <result column="operate_time" property="operateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="findUserByOrg" resultType="com.fintecher.manage.vo.SearchUserModel" parameterType="com.fintecher.manage.vo.SearchUserParams">
+        SELECT
+        u.id AS id,
+        u.user_type AS userType,
+        u.user_userName AS userUsername,
+        u.user_realname AS userRealname,
+        u.user_sex AS userSex,
+        u.user_phone AS userPhone,
+        u.user_email AS userEmail,
+        u.user_status AS userStatus,
+        u.user_remark AS userRemark,
+        u.operator_time AS operateTime,
+        o.org_name AS orgName,
+        o.id AS orgId,
+        (SELECT user_realname FROM sys_user WHERE id = u.operator) AS operatorName
+        FROM sys_user u
+        LEFT JOIN sys_org o ON u.org_id = o.id
+        WHERE o.org_tree_code LIKE CONCAT((SELECT org_tree_code FROM sys_org WHERE id = #{orgId}), '%')
+        <if test="userName != null and userName != ''">
+            AND u.user_userName LIKE CONCAT('%',#{userName},'%')
+        </if>
+        <if test="realName != null and realName != ''">
+            AND u.user_realname LIKE CONCAT('%',#{realName},'%')
+        </if>
+        <if test="userStatus != null">
+            AND u.user_status = #{userStatus}
+        </if>
+        ORDER BY operateTime DESC
+    </select>
+
+    <select id="findByUserName" resultMap="userResultMap">
+      SELECT u.id,u.company,u.dept_id,u.login_address,u.login_type,u.operate_time,
+      u.operator,u.user_email,u.user_manager,u.user_password,u.user_realname,
+      u.user_sex,u.user_status,u.user_type,u.user_username
+      FROM user_information u WHERE  u.user_username = #{username}
+    </select>
+
+    <select id="findDeptAllUsers" parameterType="string" resultMap="userResultMap">
+      SELECT u.id,u.company,u.dept_id,u.login_address,u.login_type,u.operate_time,
+      u.operator,u.user_email,u.user_manager,u.user_password,u.user_realname,
+      u.user_sex,u.user_status,u.user_type,u.user_username
+        FROM
+            user_information u
+        LEFT JOIN department d ON d.dept_code LIKE CONCAT(#{deptCode}, '%')
+        where u.dept_id = d.id;
+    </select>
+
+    <!--获取用户所有的数据权限对应的树形编码集合-->
+    <select id="findAllDataAuth" parameterType="java.lang.Long" resultType="java.lang.String">
+        SELECT DISTINCT T1.org_tree_code FROM (
+        SELECT o1.org_id, so.org_tree_code FROM sys_role_orgs o1
+        LEFT JOIN sys_org so ON o1.org_id = so.id
+        WHERE role_id IN (SELECT role_id FROM sys_user_role WHERE user_id = #{userId})) T1
+    </select>
+
+    <!--获取用户所有排除的数据权限对应的树形编码集合-->
+    <select id="findAllExceptDataAuth" parameterType="java.lang.Long" resultType="java.lang.String">
+        SELECT DISTINCT T1.org_tree_code FROM (
+        SELECT o1.org_id, so.org_tree_code FROM sys_role_except_orgs o1
+        LEFT JOIN sys_org so ON o1.org_id = so.id
+        WHERE role_id IN (SELECT role_id FROM sys_user_role WHERE user_id = #{userId})) T1
+    </select>
+
+    <select id="findRoleByUserId" parameterType="java.lang.Long" resultType="com.fintecher.entity.SysRole">
+        SELECT id AS id, org_id AS orgId, role_name AS roleName ,role_status AS roleStatus, dept_id AS deptId FROM sys_role WHERE id IN (SELECT role_id FROM sys_user_role WHERE user_id = #{userId})
+    </select>
+
+    <!--获取数据权限下的用户-->
+    <select id="findUserByOrgAuth" parameterType="map" resultType="com.fintecher.manage.vo.SearchUserModel">
+        SELECT
+        u.id AS id,
+        u.org_id AS orgId,
+        (SELECT org.org_name FROM sys_org WHERE id = u.org_id) AS orgName,
+        u.user_realname AS userRealname,
+        u.user_sex AS userSex,
+        u.user_phone AS userPhone,
+        u.user_email AS userEmail,
+        u.dept_id AS deptId,
+        u.user_status AS userStatus,
+        u.user_username AS userUsername,
+        u.user_remark AS userRemark,
+        (SELECT user_realname FROM sys_user WHERE id = u.operator) AS operatorName,
+        u.operator_time AS operatorTime
+        FROM sys_user u
+        LEFT JOIN sys_org org ON u.dept_id = org.id
+        <where>
+            <if test="dataAuth != null">
+                <foreach collection="dataAuth" item="item" open="AND (" close=")" separator="OR">
+                    org.org_tree_code LIKE CONCAT(#{item}, '%')
+                </foreach>
+            </if>
+            <if test="exceptDataAuth != null">
+                <foreach collection="exceptDataAuth" item="item" open="AND (" close=")" separator="AND">
+                    org.org_tree_code NOT LIKE CONCAT(#{item}, '%')
+                </foreach>
+            </if>
+            <if test="params.orgId != null">
+                AND org.org_tree_code LIKE CONCAT((SELECT org_tree_code FROM sys_org WHERE id = #{params.orgId}), '%')
+            </if>
+            <if test="params.userName != null and params.userName != ''">
+                AND u.user_username LIKE CONCAT('%', #{params.userName}, '%')
+            </if>
+            <if test="params.realName != null and params.realName != ''">
+                AND u.user_realname LIKE CONCAT('%', #{params.realName}, '%')
+            </if>
+            <if test="params.userStatus != null and params.userStatus != ''">
+                AND u.user_status = #{params.userStatus}
+            </if>
+        </where>
+    </select>
+
+    <!--工作流查询用户-->
+    <select id="queryAllUser" parameterType="com.fintecher.manage.vo.WFUserParams"
+            resultType="com.fintecher.manage.vo.WFUserModel">
+        SELECT
+        u.id AS userId,
+        u.org_id AS orgId,
+        (SELECT org_name FROM sys_org o WHERE o.id = u.org_id) orgName,
+        u.dept_id AS deptId,
+        org.org_name AS deptName,
+        u.user_realname AS userRealname,
+        u.user_username AS userUsername,
+        u.user_status AS userStatus,
+        u.user_sex AS userSex,
+        u.user_phone AS userPhone,
+        u.user_email AS userEmail,
+        U.user_remark AS userRemark
+        FROM sys_user u
+        LEFT JOIN sys_org org ON u.dept_id = org.id
+        <where>
+            <if test="userName != '' and userName != null">
+                AND u.user_username LIKE CONCAT('%', #{userName}, '%')
+            </if>
+            <if test="realName != '' and realName != null">
+                AND u.user_realname LIKE CONCAT('%', #{realName}, '%')
+            </if>
+            <if test="userStatus != null">
+                AND u.user_status = #{userStatus}
+            </if>
+            <if test="deptId != null">
+                AND org.org_tree_code LIKE CONCAT((SELECT org_tree_code FROM sys_org WHERE id = #{deptId}), '%')
+            </if>
+        </where>
+    </select>
+
+</mapper>

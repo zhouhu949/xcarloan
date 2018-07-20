@@ -11,8 +11,9 @@ spring:
         serialization.indent_output: true
     data:
         mongodb:
-            uri: mongodb://192.168.3.2:27017
-            database: carloan_dev
+            uri: mongodb://192.168.23.130:27017
+            database: xcarloan_dev
+        #    database: xcarloan_devreturn new ResponseResult(ResponseResult.Status.FAILURE, ResponseResult.ERROR_MSG_SYSTEM_ERROR)
 #    rabbitmq:
 #        username: dev
 #        password: dev
@@ -38,6 +39,6 @@ security:
     password: ${REGISTRY_SERVER_PASSWORD:password}
 
 gridfs:
-  path: 192.168.3.4:8762/service-file
+  path: 192.168.3.224:8762/service-file
   localPath: 127.0.0.7:8762/service-file
 

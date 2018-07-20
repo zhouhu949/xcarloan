@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.fintecher.manage.mapper.SysLogsMapper">
+    <select id="findSysLogsByConditions" resultType="com.fintecher.manage.vo.SysLogsModel">
+        SELECT
+        s.id AS id,
+        s.operate_time AS operateTime,
+        s.operator AS operator,
+        s.excute_method AS excuteMethod,
+        s.excute_params AS excuteParams,
+        s.excute_type AS excuteType,
+        s.excute_time AS excuteTime,
+        s.client_ip AS clientIp,
+        s.log_remark AS logRemark
+        FROM
+        sys_logs s
+        WHERE TRUE
+        <if test="clientIp !=null">
+        AND  s.client_ip LIKE CONCAT(#{clientIp},'%')
+        </if>
+        <if test="operator !=null">
+          AND  s.operator LIKE CONCAT(#{operator},'%')
+        </if>
+        <if test="excuteMethod != null">
+            AND s.excute_method LIKE CONCAT(#{excuteMethod}, '%')
+        </if>
+        <if test="excuteParams != null">
+            AND s.excute_params LIKE CONCAT(#{excuteParams}, '%')
+        </if>
+        <if test="excuteType != null">
+            AND s.excute_type LIKE CONCAT(#{excuteType}, '%')
+        </if>
+
+        <if test="excuteTime != null">
+            AND s.excute_time = #{excuteTime}
+        </if>
+
+        <if test="startTime != null">
+            AND s.operate_time &gt;= #{startTime}
+        </if>
+        <if test="endTime != null">
+            AND s.operate_time &lt;= #{endTime}
+        </if>
+        <if test="sort == null">
+            ORDER BY s.operate_time DESC
+        </if>
+        <if test="sort!=null">
+            ORDER BY ${sort} DESC
+        </if>
+    </select>
+</mapper>

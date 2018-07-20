@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.fintecher.manage.mapper.SysParameterMapper">
+    <select id="findSysParameterByCondition" resultType="com.fintecher.manage.vo.SysParameterModel">
+        SELECT
+        s.id AS id,
+        s.param_name AS paramName,
+        s.param_code AS paramCode,
+        s.param_status AS paramStatus,
+        s.param_type AS paramType,
+        s.param_value AS paramValue,
+        s.remark AS remark,
+        s.operator_time AS operateTime,
+        u.user_realname AS operatorName
+        FROM
+        sys_parameter AS s
+        LEFT JOIN sys_user AS u ON s.operator = u.id
+        WHERE TRUE
+        <if test="paramName != null">
+            AND s.param_name LIKE CONCAT('%',#{paramName},'%')
+        </if>
+        <if test="paramStatus != null">
+            AND s.param_status = #{paramStatus}
+        </if>
+        <if test="sort == null">
+            ORDER BY s.operator_time DESC
+        </if>
+        <if test="sort!=null">
+            ORDER BY ${sort} DESC
+        </if>
+    </select>
+</mapper>

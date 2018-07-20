@@ -2,9 +2,10 @@ spring:
     profiles:
         active: dev
     datasource:
-       url: jdbc:mysql://192.168.3.2:3507/carloan_dev?useUnicode=true&characterEncoding=utf-8&autoReconnect=true&allowMultiQueries=true&useSSL=false
+#      url: jdbc:mysql://192.168.3.2:3507/xcarloan_dev?useUnicode=true&characterEncoding=utf-8&autoReconnect=true&allowMultiQueries=true&useSSL=false
+       url: jdbc:mysql://192.168.22.194:3306/xcar_3.0?useUnicode=true&characterEncoding=utf-8&autoReconnect=true&allowMultiQueries=true&useSSL=false
        username: root
-       password: 123456
+       password: root
 #    rabbitmq:
 #      username: dev
 #      password: dev
@@ -16,10 +17,10 @@ spring:
     #redis-cache 相关
     redis:
       database: 12
-      host: 192.168.3.2
+      host: 192.168.22.194
       port: 6379
-      sysName: carloan
-      password: redis123456
+    #   sysName: carloan
+    #   password: redis123456
       pool:
         #连接池支持的最大连接数
         max-active: 1000
@@ -31,12 +32,18 @@ spring:
         testOnBorrow: true
         #test
         testOnReturn: true
+
 mybatis:
     basePackage: com.fintecher.manage.mapper
     xmlLocation: classpath:mapper/**/*.xml
     configuration:
        map-underscore-to-camel-case: true
        mapUnderscoreToCamelCase: true
+mapper:
+    mappers:
+      - com.fintecher.manage.util.MyMapper
+    not-empty: false
+    identity: MYSQL
 eureka:
   instance:
     statusPageUrlPath: /info
@@ -51,3 +58,11 @@ security:
   user:
     name: user
     password: ${REGISTRY_SERVER_PASSWORD:password}
+
+# 工作流接口
+workFlow:
+  api:
+   start: http://192.168.3.224:8080/wf/api/process/start
+   next: http://192.168.3.224:8080/wf/api/process/next
+   queryTasks: http://192.168.3.224:8080/wf/api/process/queryTasks
+   end: http://192.168.3.224:8080/wf/api/process/task/endtask

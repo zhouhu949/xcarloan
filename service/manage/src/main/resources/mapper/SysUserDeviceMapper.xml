@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.fintecher.manage.mapper.SysUserDeviceMapper">
+
+    <update id="updateBatchUserDevice" parameterType="map">
+        UPDATE sys_user_device
+        <set>
+            <if test="sysUserDevice.deviceType != null">
+                device_type = #{sysUserDevice.deviceType},
+            </if>
+            <if test="sysUserDevice.deviceValidate != null">
+                device_validate = #{sysUserDevice.deviceValidate},
+            </if>
+            <if test="sysUserDevice.deviceStatus != null">
+                device_status = #{sysUserDevice.deviceStatus},
+            </if>
+            <choose>
+                <when test="sysUserDevice.deviceMac != null and sysUserDevice.deviceMac != ''">
+                    device_mac = #{sysUserDevice.deviceMac},
+                </when>
+                <otherwise>
+                    device_mac = NULL,
+                </otherwise>
+            </choose>
+            <if test="sysUserDevice.operator != null">
+                operator = #{sysUserDevice.operator},
+            </if>
+            <if test="sysUserDevice.operatorTime != null">
+                operator_time = #{sysUserDevice.operatorTime},
+            </if>
+        </set>
+        <where>
+            id IN
+            <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="findUserDevice" parameterType="arraylist" resultType="com.fintecher.manage.vo.UserDeviceModel">
+        SELECT
+        device.id AS id,
+        device.user_id AS userId,
+        u.user_username AS userName,
+        u.user_realname AS realName,
+        device.device_code AS deviceCode,
+        device.device_type AS deviceType,
+        device.device_name AS deviceName,
+        device.device_validate AS deviceValidate,
+        device.device_status AS deviceStatus,
+        device.device_mac AS deviceMac
+        FROM sys_user_device device
+        LEFT JOIN sys_user u ON u.id = device.user_id
+        WHERE device.user_id IN
+        <foreach collection="userIds" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+</mapper>

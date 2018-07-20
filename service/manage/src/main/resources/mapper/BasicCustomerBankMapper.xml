@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.BasicCustomerBankMapper">
+<select id="queryCustomerBankInfo" resultType="com.fintecher.entity.BasicCustomerBank">
+    SELECT a.id as id,
+    a.customer_id as customerId,
+    a.bank_name as bankName,
+    a.card_no as cardNo,
+    a.account_status as accountStatus,
+	a.account_type as accountType,
+	a.deposit_city as depositCity,
+	a.bank_branch as bankBranch,
+    a.client_number as clientNumber,
+    a.province as province,
+	a.remark as remark
+    FROM basic_customer_bank a LEFT JOIN basic_customer b
+    on  a.customer_id = b.id where a.customer_id = #{customerId}
+
+</select>
+<select id="selectByCustomerId" parameterType="com.fintecher.entity.BasicCustomerBank" resultType="com.fintecher.entity.BasicCustomerBank">
+    select id from basic_customer_bank where customer_id=#{customerId} and account_status=#{accountStatus}
+</select>
+</mapper>

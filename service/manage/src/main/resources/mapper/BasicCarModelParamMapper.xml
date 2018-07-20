@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.BasicCarModelParamMapper">
+    <select id="getCarParams" resultType="com.fintecher.manage.vo.AddCarModelParamAndModelParams">
+        SELECT
+        a.model_name AS modelName,
+        b.series_name seriesName,
+        c.brand_name AS brandName,
+        p.structure AS structure,
+        p.displacement AS displacement,
+        p.diveway AS diveway,
+        p.fulyway AS fulyway,
+        p.inner_color AS innerColor,
+        a.model_colors AS modelColors,
+        p.model_fuel AS modelFuel,
+        p.model_volume AS modelVolume,
+        p.remark AS remark,
+        a.reference_price AS referencePrice
+
+        FROM basic_car_model a
+        LEFT JOIN basic_car_brand_series b ON a.series_id = b.id
+        LEFT JOIN basic_car_brand c ON b.brand_id = c.id
+        LEFT JOIN basic_carmodel_param p ON a.id = p.model_id
+        WHERE a.id =#{id} AND p.is_sys_param = 10002
+
+    </select>
+
+
+
+    <select id="queryParamId" resultType="java.lang.Long">
+        SELECT p.id
+        FROM basic_car_model a
+        LEFT JOIN basic_carmodel_param p ON a.id = p.model_id
+        WHERE a.id =#{id} AND p.is_sys_param = 10002
+
+    </select>
+
+
+    <select id="getCarParamById" resultType="com.fintecher.manage.vo.BasicCarmodelParamValue">
+
+        SELECT p.id AS id,
+        p.car_param_name AS carParamName,
+        p.car_param_value AS carParamValue
+        FROM basic_car_model a
+        LEFT JOIN basic_carmodel_param p ON a.id = p.model_id
+        WHERE p.id =#{id} AND p.is_sys_param = 10003
+
+    </select>
+
+    <select id="selectCountDeleteModelCar" resultType="java.lang.Integer">
+        SELECT
+        (a.total + d.total+ b.total + c.total) AS total
+
+        FROM
+
+        ( SELECT COUNT(model_id) total FROM basic_stock_car WHERE model_id = #{id}) a,
+
+        ( SELECT COUNT(model_id) total FROM basic_carmodel_photo WHERE model_id = #{id}) b,
+
+        (SELECT COUNT(model_id) total FROM basic_car_introduce WHERE model_id = #{id}) c,
+
+        (SELECT COUNT(config_id) total FROM basic_product WHERE config_id = #{id} ) d
+
+
+    </select>
+</mapper>

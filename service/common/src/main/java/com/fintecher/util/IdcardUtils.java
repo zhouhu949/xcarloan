@@ -28,7 +28,7 @@ public class IdcardUtils extends StringUtils {
     };
 
     /** 每位加权因子 */
-    public static final int power[] = {
+    private static final int power[] = {
             7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2
     };
 
@@ -37,12 +37,12 @@ public class IdcardUtils extends StringUtils {
             "1", "0", "X", "9", "8", "7", "6", "5", "4", "3", "2"
     };
     /** 最低年限 */
-    public static final int MIN = 1930;
-    public static Map<String, String> cityCodes = new HashMap<String, String>();
+    private static final int MIN = 1930;
+    private static final Map<String, String> cityCodes = new HashMap<String, String>();
     /** 台湾身份首字母对应数字 */
-    public static Map<String, Integer> twFirstCode = new HashMap<String, Integer>();
+    private static final Map<String, Integer> twFirstCode = new HashMap<String, Integer>();
     /** 香港身份首字母对应数字 */
-    public static Map<String, Integer> hkFirstCode = new HashMap<String, Integer>();
+    private static final Map<String, Integer> hkFirstCode = new HashMap<String, Integer>();
 
     static {
         cityCodes.put("11", "北京");
@@ -240,8 +240,8 @@ public class IdcardUtils extends StringUtils {
             Calendar cal = Calendar.getInstance();
             if (birthDate != null)
                 cal.setTime(birthDate);
-            if (!valiDate(cal.get(Calendar.YEAR), Integer.valueOf(birthCode.substring(2, 4)),
-                    Integer.valueOf(birthCode.substring(4, 6)))) {
+            if (!valiDate(cal.get(Calendar.YEAR), Integer.parseInt(birthCode.substring(2, 4)),
+                    Integer.parseInt(birthCode.substring(4, 6)))) {
                 return false;
             }
         } else {
@@ -313,10 +313,11 @@ public class IdcardUtils extends StringUtils {
         char[] chars = mid.toCharArray();
         Integer iflag = 8;
         for (char c : chars) {
-            sum = sum + Integer.valueOf(c + "") * iflag;
+            sum +=  Integer.valueOf(c) * iflag;
             iflag--;
         }
-        return (sum % 10 == 0 ? 0 : (10 - sum % 10)) == Integer.valueOf(end) ? true : false;
+        int res = (sum % 10 == 0 ? 0 : (10 - sum % 10));
+        return res == Integer.parseInt(end) ;
     }
 
     /**
@@ -347,13 +348,13 @@ public class IdcardUtils extends StringUtils {
         char[] chars = mid.toCharArray();
         Integer iflag = 7;
         for (char c : chars) {
-            sum = sum + Integer.valueOf(c + "") * iflag;
+            sum +=  Integer.valueOf(c) * iflag;
             iflag--;
         }
         if (end.toUpperCase().equals("A")) {
             sum = sum + 10;
         } else {
-            sum = sum + Integer.valueOf(end);
+            sum +=  Integer.parseInt(end);
         }
         return (sum % 11 == 0) ? true : false;
     }
@@ -440,6 +441,8 @@ public class IdcardUtils extends StringUtils {
             case 0:
                 sCode = "1";
                 break;
+            default:
+                break;
         }
         return sCode;
     }
@@ -459,7 +462,7 @@ public class IdcardUtils extends StringUtils {
         String year = idCard.substring(6, 10);
         Calendar cal = Calendar.getInstance();
         int iCurrYear = cal.get(Calendar.YEAR);
-        iAge = iCurrYear - Integer.valueOf(year);
+        iAge = iCurrYear - Integer.parseInt(year);
         return iAge;
     }
 

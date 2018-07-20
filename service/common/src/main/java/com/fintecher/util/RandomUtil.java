@@ -15,23 +15,6 @@ public class RandomUtil {
         return i.toString();
     }
 
-    public static void main(String[] args) {
-        long start=System.currentTimeMillis();
-        for(int i = 0 ; i < 5000 ; i ++) {
-            getRandomNumber(6);
-//            System.out.println(   " "+ getRandomNumber(6));
-        }
-        long end=System.currentTimeMillis();
-        System.err.println("A time="+(end-start)+" ms");
-          start=System.currentTimeMillis();
-        for(int i = 0 ; i < 5000 ; i ++) {
-//            System.out.println(   " "+ random6());
-            random6();
-        }
-          end=System.currentTimeMillis();
-        System.err.println("B time="+(end-start)+" ms");
-
-    }
 
     /**
      * 逐位生成随机整数

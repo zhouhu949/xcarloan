@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.BasicOrderFileMapper">
+
+    <!--查看当前上传资料-->
+    <select id="findUploadBasicFile" resultType="com.fintecher.entity.BasicOrderFile">
+       SELECT
+        a.id as fileId,
+        a.order_id as orderId,
+        a.order_file_type as orderFileType,
+        a.file_url as fileUrl,
+        a.data_type AS dataType,
+        a.file_name as fileName
+        FROM basic_order_file a
+        WHERE  a.id = #{fileId}
+
+    </select>
+
+    <!--查看订单上传资料-->
+    <select id="findCountByOrderFile" resultType="com.fintecher.manage.vo.CustomerOrderFileCountModel">
+     select count(*) as fileCount ,
+    a.order_file_type as orderFileType,
+    a.file_url as fileUrl,
+    a.order_id  as orderId,
+    a.file_name as fileName,
+    a.data_type as dataType
+    from basic_order_file a
+    WHERE a.order_id = #{orderId}
+		GROUP BY a.id
+    </select>
+</mapper>

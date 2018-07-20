@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.BasicOffsetMapper">
+
+    <update id="updateBasicOffset" parameterType="com.fintecher.entity.BasicOffset">
+        update basic_offset
+        <set>
+            <if test="orgId !=null">org_id= #{orgId},</if>
+            <if test="offsetName !=null">offset_name= #{offsetName},</if>
+            <if test="offsetType !=null">offset_type= #{offsetType},</if>
+            <if test="remark !=null">remark= #{remark},</if>
+            <if test="operator !=null">operator = #{operator},</if>
+            <if test="operatorTime !=null">operator_time= #{operatorTime} </if>
+        </set>
+       where id=#{id}
+
+    </update>
+    <select id="deletecheck" parameterType="com.fintecher.entity.BasicOffset" resultType="int">
+        SELECT (a.total + b.total) as total FROM(SELECT count(expense_id) total FROM basic_offset_item  where offset_id=#{id}) a,
+       (SELECT count(offset_id) total FROM basic_repay_scheme where offset_id=#{id} ) b
+
+    </select>
+
+    <select id="findBasicOffsetByAuth" parameterType="map" resultType="com.fintecher.entity.BasicOffset">
+        SELECT
+        offset.id AS id,
+        offset.offset_name AS offsetName,
+        offset.offset_type AS offsetType,
+        offset.remark AS remark
+        FROM basic_offset offset
+        LEFT JOIN sys_org org ON offset.org_id = org.id
+        <where>
+            <if test="dataAuth != null">
+                <foreach collection="dataAuth" item="item" open="AND (" close=")" separator="OR">
+                    org.org_tree_code LIKE CONCAT(#{item}, '%')
+                </foreach>
+            </if>
+            <if test="exceptDataAuth != null">
+                <foreach collection="exceptDataAuth" item="item" open="AND (" close=")" separator="AND">
+                    org.org_tree_code NOT LIKE CONCAT(#{item}, '%')
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+</mapper>

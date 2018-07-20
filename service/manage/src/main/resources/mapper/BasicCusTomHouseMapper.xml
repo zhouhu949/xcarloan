@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fintecher.manage.mapper.BasicCustomHouseMapper">
+
+    <select id="findCustomHouseList" parameterType="java.lang.Long" resultType="com.fintecher.entity.BasicCustomerHouse">
+        SELECT
+             id,
+             house_id,
+             customer_id,
+             house_address,
+             house_type,
+             house_area,
+             operator,
+             remark,
+             operator_time
+        FROM basic_customer_house
+        WHERE customer_id=#{custemId}
+    </select>
+</mapper>

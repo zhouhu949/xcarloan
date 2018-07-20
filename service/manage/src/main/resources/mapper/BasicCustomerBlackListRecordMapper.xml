@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.BasicCustomerBlacklistRecordMapper">
+<select id="queryCustomerBlackListRecord" resultType="com.fintecher.manage.vo.BasicCustomerBlackListRecordModel">
+      SELECT b.account_status accountStatus,
+      b.customer_code as customerCode,
+      b.customer_name as customerName,
+      b.customer_sex as customerSex,
+      b.org_id as orgId,
+      b.customer_phone as customerPhone,
+      a.begin_time as beginTime,
+      a.blacklist_type as blackListType,
+      a.customer_id as customerId,
+      a.end_time as endTime,
+      a.operator,
+      a.operator_time as operatorTime,
+      a.remark
+      from basic_customer_blacklist_record a
+      LEFT JOIN basic_customer b on a.customer_id = b.id
+      WHERE b.id = #{id}
+</select>
+</mapper>

@@ -1,0 +1,482 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.BasicOrderRepaySchemeMapper">
+
+    <select id="selectByOrderId" parameterType="com.fintecher.entity.BasicOrderRepayScheme"
+            resultType="com.fintecher.entity.BasicOrderRepayScheme">
+        select
+  id,
+  expense_id as expenseId,
+  repay_template_id as  repayTemplateId,
+  order_id as  orderId,
+  periods as  periods,
+  repay_money as  repayMoney,
+  is_repay_money as isRepayMoney,
+  repay_status as repayStatus,
+  expense_name as expenseName,
+  expense_code as expenseCode,
+  operator as operator,
+  operator_time as  operatorTime,
+  remark from basic_order_repay_scheme where order_id=#{orderId} and periods=#{periods} and expense_code=#{expenseCode}
+    </select>
+    <select id="selectByOrder" parameterType="com.fintecher.entity.BasicOrderRepayScheme"
+            resultType="com.fintecher.entity.BasicOrderRepayScheme">
+    SELECT
+	bore.id AS id,
+	boi.expense_id AS expenseId,
+	bore.repay_template_id AS repayTemplateId,
+	bore.order_id AS orderId,
+	bore.periods AS periods,
+	bore.repay_money AS repayMoney,
+	bore.is_repay_money AS isRepayMoney,
+	bore.repay_status AS repayStatus,
+	bore.expense_name AS expenseName,
+	bore.expense_code AS expenseCode,
+	bore.operator AS operator,
+	bore.operator_time AS operatorTime,
+	bore.remark AS remark,
+	bore.repayment_date AS repaymentDate
+    FROM
+	basic_order_repay_scheme bore
+	LEFT JOIN basic_customer_order bco ON bco.id = bore.order_id
+	LEFT JOIN basic_repay_scheme brs ON brs.id = bco.scheme_id
+	INNER JOIN basic_offset bo ON bo.id = brs.offset_id
+	INNER JOIN basic_offset_item boi ON boi.expense_id = bore.expense_id
+	AND boi.offset_id = bo.id
+	where bore.order_id=#{orderId} and bore.periods=#{periods}
+	ORDER BY
+	boi.item_order
+</select>
+    <select id="selectByRepay" parameterType="com.fintecher.entity.BasicOrderRepayScheme"
+            resultType="java.math.BigDecimal">
+        select sum(repay_money)-ifnull(sum(is_repay_money),0) as money from
+        basic_order_repay_scheme where periods=#{periods} and order_id=#{orderId}
+    </select>
+    <!-- 查询订单剩余未还清的余额 -->
+    <select id="selectBalance" parameterType="java.lang.Long" resultType="java.math.BigDecimal">
+        select sum(repay_money)-ifnull(sum(is_repay_money),0) as money from basic_order_repay_scheme where order_id=#{orderId}
+    </select>
+    <!-- 查询订单剩余未还清的余额详情 -->
+    <select id="selectDetails" parameterType="java.lang.Long" resultType="com.fintecher.manage.vo.PrepaymentModel">
+    SELECT
+    order_id as orderId,
+	expense_name AS expenseName,
+	sum( repay_money ) AS repayMoney,
+	sum( IFNULL( is_repay_money , 0 ) ) AS isRepayMoney,
+	sum( repay_money ) - sum( ifnull( is_repay_money, 0 ) ) AS money
+    FROM
+	basic_order_repay_scheme
+    WHERE
+	order_id = #{orderId}
+	AND repay_money - ifnull( is_repay_money, 0 ) > 0
+    GROUP BY
+    order_id,
+	expense_name
+</select>
+
+    <select id="selectRepayMoney" parameterType="java.lang.Long" resultType="java.math.BigDecimal">
+    SELECT
+	ifnull( sum( repay_money ), 0 ) AS Money
+    FROM
+        basic_order_repay_scheme
+    WHERE
+	order_id=#{orderId}
+</select>
+    <select id="selectCountMoney" parameterType="java.lang.Long" resultType="com.fintecher.manage.vo.PrepaymentModel">
+        select
+            sum(repay_money) as repayMoney,
+            sum( ifnull(is_repay_money , 0 ) ) as isRepayMoney,
+            ( sum( repay_money ) - sum( ifnull (is_repay_money , 0 ) ) ) as money
+        from
+            basic_order_repay_scheme
+        where
+            order_id=#{orderId}
+    </select>
+    <!-- 提前还款修改-->
+    <update id="updateRecover" parameterType="com.fintecher.entity.BasicOrderRepayScheme">
+        update basic_order_repay_scheme set is_repay_money=#{isRepayMoney},
+        repay_status=#{repayStatus}
+        where id=#{id}
+    </update>
+    <update id="updateRepayMoney" parameterType="com.fintecher.entity.BasicOrderRepayScheme">
+        update basic_order_repay_scheme set is_repay_money=repay_money,
+        repay_status=#{repayStatus}
+        where order_id=#{orderId}
+    </update>
+    <select id="selectPeriods" parameterType="java.lang.Long" resultType="java.lang.Integer">
+    select periods from basic_order_repay_scheme where order_id=#{orderId} and repay_money-ifnull(is_repay_money,0)>0
+    and periods!=0 ORDER BY periods asc limit 1
+    </select>
+    <select id="getGatheringModel" parameterType="java.lang.Long" resultType="com.fintecher.manage.vo.GatheringModel">
+        SELECT
+        scheme.order_id AS orderId,
+        scheme.expense_name AS expenseName,
+        scheme.expense_code AS expenseCode,
+        sum( scheme.repay_money ) AS repayMoney
+        FROM
+        basic_customer_order orde
+        LEFT JOIN basic_order_repay_scheme scheme ON scheme.order_id = orde.id
+        WHERE
+        scheme.order_id = #{orderId}
+        AND scheme.periods = 0
+        GROUP BY
+        scheme.order_id,
+        scheme.expense_name,
+        scheme.expense_code,
+        scheme.periods
+    </select>
+
+    <select id="selectReceiptOrder" parameterType="Map" resultType="com.fintecher.manage.vo.ReceiptOrder">
+        SELECT
+        scheme.order_id AS orderId,
+        orde.customer_id AS customerId,
+        orde.order_no AS orderNo,
+        customer.customer_name as customerName,
+        sum( scheme.repay_money ) AS proceedMoney,
+        sum( scheme.repay_money - ifnull( scheme.is_repay_money, 0 ) ) <![CDATA[ <=  ]]>  0 AS yesOrNo
+        FROM
+        basic_customer_order orde
+        LEFT JOIN basic_order_repay_scheme scheme ON scheme.order_id = orde.id
+        LEFT JOIN  basic_customer customer on customer.id = orde.customer_id
+        WHERE
+        (scheme.periods = 0 OR scheme.periods = null )
+        AND (scheme.repay_status =null OR scheme.repay_status = 10117)
+        AND orde.order_status=10109
+        <if test="customerName != null and customerName != ''">
+            AND customer.customer_name LIKE CONCAT('%',#{customerName} ,'%')
+        </if>
+        <if test="orderNo != null and orderNo != ''">
+            AND orde.order_no LIKE CONCAT('%',#{orderNo} ,'%')
+        </if>
+        <if test="idCard != null and idCard != ''">
+            AND customer.id_card LIKE CONCAT('%',#{idCard} ,'%')
+        </if>
+        <if test="customerPhone != null and customerPhone != ''">
+            AND customer.customer_phone LIKE CONCAT('%',#{customerPhone} ,'%')
+        </if>
+        GROUP BY
+        scheme.order_id,
+        orde.customer_id,
+        orde.order_no,
+        customer.customer_name
+    </select>
+
+    <select id="queryByStatus" parameterType="map" resultType="com.fintecher.manage.vo.OrderInfoModel">
+        SELECT
+        bc.id AS customerId,
+        bc.customer_name AS customerName,
+        bc.id_card AS idCard,
+        bc.customer_phone AS customerPhone,
+        bco.id AS orderId,
+        bco.order_no AS orderNo,
+        bco.order_type AS orderType,
+        bco.order_status AS orderStatus,
+        bco.order_repay_type AS orderRepayType,
+        bco.order_periods AS orderPeriods,
+        bco.order_price AS orderPrice,
+        brs.id AS schemeId,
+        brs.scheme_name AS schemeName
+        FROM basic_customer_order bco
+        LEFT JOIN basic_repay_scheme brs ON bco.scheme_id = brs.id
+        LEFT JOIN basic_customer bc ON bco.customer_id = bc.id
+        LEFT JOIN sys_org so ON bco.org_id = so.id
+        WHERE 1=1
+        AND bco.order_status = #{orderStatus}
+        <if test="orderType != null">
+            AND bco.order_type = #{orderType}
+        </if>
+        <if test="dataAuth.size() > 0">
+            <foreach collection="dataAuth" item="item" open="AND (" close=")" separator="OR">
+                so.org_tree_code LIKE CONCAT(#{item}, '%')
+            </foreach>
+        </if>
+        <if test="exceptDataAuth.size() > 0">
+            <foreach collection="exceptDataAuth" item="item" open="AND (" close=")" separator="AND">
+                so.org_tree_code NOT LIKE CONCAT(#{item}, '%')
+            </foreach>
+        </if>
+        <if test="customerName != null and customerName != ''">
+            AND bc.customer_name LIKE CONCAT('%',#{customerName} ,'%')
+        </if>
+        <if test="orderNo != null and orderNo != ''">
+            AND bco.order_no LIKE CONCAT('%',#{orderNo} ,'%')
+        </if>
+        <if test="idCard != null and idCard != ''">
+            AND bc.id_card LIKE CONCAT('%',#{idCard} ,'%')
+        </if>
+        <if test="customerPhone != null and customerPhone != ''">
+            AND bc.customer_phone LIKE CONCAT('%',#{customerPhone} ,'%')
+        </if>
+        ORDER BY bco.id DESC
+    </select>
+    <!-- 查询未退款的订单 -->
+    <select id="selectRefundOrder" parameterType="Map" resultType="com.fintecher.manage.vo.OrderInfoModel">
+        SELECT
+        bc.id AS customerId,
+        bc.customer_name AS customerName,
+        bc.id_card AS idCard,
+        bc.customer_phone AS customerPhone,
+        bco.id AS orderId,
+        bco.order_no AS orderNo,
+        bco.order_type AS orderType,
+        bco.order_status AS orderStatus,
+        bco.order_repay_type AS orderRepayType,
+        bco.order_periods AS orderPeriods,
+        brs.id AS schemeId,
+        brs.scheme_name AS schemeName,
+        sum( ors.repay_money ) AS orderPrice
+        FROM
+        basic_customer_order bco
+        LEFT JOIN basic_repay_scheme brs ON bco.scheme_id = brs.id
+        LEFT JOIN basic_customer bc ON bco.customer_id = bc.id
+        LEFT JOIN sys_org so ON bco.org_id = so.id
+        LEFT JOIN basic_order_repay_scheme ors ON ors.order_id = bco.id
+        WHERE 1=1
+        AND ors.repay_money <![CDATA[ <= ]]> 0
+        AND bco.order_status in (10112,10115,10116)
+        AND ors.repay_status = 10117
+        <if test="dataAuth.size() > 0">
+            <foreach collection="dataAuth" item="item" open="AND (" close=")" separator="OR">
+                so.org_tree_code LIKE CONCAT(#{item}, '%')
+            </foreach>
+        </if>
+        <if test="exceptDataAuth.size() > 0">
+            <foreach collection="exceptDataAuth" item="item" open="AND (" close=")" separator="AND">
+                so.org_tree_code NOT LIKE CONCAT(#{item}, '%')
+            </foreach>
+        </if>
+        <if test="customerName != null and customerName != ''">
+            AND bc.customer_name LIKE CONCAT('%',#{customerName} ,'%')
+        </if>
+        <if test="orderNo != null and orderNo != ''">
+            AND bco.order_no LIKE CONCAT('%',#{orderNo} ,'%')
+        </if>
+        <if test="idCard != null and idCard != ''">
+            AND bc.id_card LIKE CONCAT('%',#{idCard} ,'%')
+        </if>
+        <if test="customerPhone != null and customerPhone != ''">
+            AND bc.customer_phone LIKE CONCAT('%',#{customerPhone} ,'%')
+        </if>
+        GROUP BY
+        bc.id,
+        bc.customer_name,
+        bc.id_card,
+        bc.customer_phone,
+        bco.id,
+        bco.order_no,
+        bco.order_type,
+        bco.order_status,
+        bco.order_repay_type,
+        bco.order_periods,
+        brs.id
+        ORDER BY bco.id DESC
+    </select>
+
+    <select id="selectCurrentPeriods" parameterType="java.lang.Long" resultType="Integer">
+    SELECT
+	min( periods )
+    FROM
+	basic_order_repay_scheme
+    WHERE
+	repay_status IN ( 10117, 10120 )
+	AND periods != 0
+	AND order_id =#{orderId}
+    </select>
+
+    <select id="selectRepayInfo" parameterType="Map" resultType="com.fintecher.entity.BasicOrderRepayScheme">
+     SELECT
+     id,
+	expense_id AS expenseId,
+	order_id AS orderId,
+	periods AS periods,
+	repay_status AS repayStatus,
+	IFNULL(is_repay_money ,0) AS isRepayMoney,
+	repay_money AS repayMoney,
+	expense_name AS expenseName,
+	expense_code AS expenseCode,
+	operator,
+	operator_time AS operatorTime
+    FROM
+        basic_order_repay_scheme
+    WHERE
+	order_id = #{orderId}
+	AND periods =#{periods}
+    </select>
+
+    <select id="selectRepayInfoMoney" parameterType="Map" resultType="java.math.BigDecimal">
+       SELECT
+	 IFNULL( sum( repay_money ) , 0 ) - IFNULL( sum( is_repay_money), 0 ) repayMoney
+    FROM
+        basic_order_repay_scheme
+    WHERE
+	order_id = #{orderId}
+	AND periods =#{periods}
+    </select>
+    <update id="updateRepayScheme" parameterType="Map">
+         update basic_order_repay_scheme set
+        is_repay_money=repay_money, repay_status = #{status}
+        where order_id = #{orderId}
+        and periods = #{periods}
+    </update>
+
+
+    <select id="getCountMoney" parameterType="java.lang.Long" resultType="java.math.BigDecimal">
+        SELECT
+        sum( scheme.repay_money ) AS repayMoney
+        FROM
+        basic_customer_order orde
+        LEFT JOIN basic_order_repay_scheme scheme ON scheme.order_id = orde.id
+        WHERE
+        scheme.order_id = #{orderId}
+        AND scheme.periods = 0
+    </select>
+
+    <select id="queryByReplayMoney" parameterType="Map" resultType="com.fintecher.manage.vo.OrderModel">
+        SELECT
+        bc.id AS customerId,
+        bc.customer_name AS customerName,
+        bc.id_card AS idCard,
+        bc.customer_phone AS customerPhone,
+        bco.id AS orderId,
+        bco.order_no AS orderNo,
+        bco.order_type AS orderType,
+        bco.order_status AS orderStatus,
+        bco.order_repay_type AS orderRepayType,
+        bco.order_periods AS orderPeriods,
+        bco.order_price AS orderPrice,
+        bco.order_now_periods as orderNowPeriods,
+        brs.id AS schemeId,
+        sum(bors.is_repay_money) as finishMoney,
+        sum(bors.repay_money)-sum(IFNULL(bors.is_repay_money,0)) as remainRepayment,
+        brs.scheme_name AS schemeName
+        FROM basic_customer_order bco
+        LEFT JOIN basic_repay_scheme brs ON bco.scheme_id = brs.id
+        LEFT JOIN basic_order_repay_scheme bors ON bors.order_id= bco.id
+        LEFT JOIN basic_customer bc ON bco.customer_id = bc.id
+        LEFT JOIN sys_org org ON bco.org_id = org.id
+        WHERE bco.order_status=#{orderStatus}
+        <if test="dataAuth.size() > 0">
+            <foreach collection="dataAuth" item="item" open="AND (" close=")" separator="OR">
+                org.org_tree_code LIKE CONCAT(#{item}, '%')
+            </foreach>
+        </if>
+        <if test="exceptDataAuth.size() > 0">
+            <foreach collection="exceptDataAuth" item="item" open="AND (" close=")" separator="AND">
+                org.org_tree_code NOT LIKE CONCAT(#{item}, '%')
+            </foreach>
+        </if>
+        <if test="customerName != null and customerName != ''">
+            AND bc.customer_name LIKE CONCAT('%',#{customerName} ,'%')
+        </if>
+        <if test="orderNo != null and orderNo != ''">
+            AND bco.order_no LIKE CONCAT('%',#{orderNo} ,'%')
+        </if>
+        <if test="idCard != null and idCard != ''">
+            AND bc.id_card LIKE CONCAT('%',#{idCard} ,'%')
+        </if>
+        <if test="customerPhone != null and customerPhone != ''">
+            AND bc.customer_phone LIKE CONCAT('%',#{customerPhone} ,'%')
+        </if>
+        GROUP BY
+        bc.id,
+        bc.customer_name,
+        bc.id_card,
+        bc.customer_phone ,
+        bco.id ,
+        bco.order_no,
+        bco.order_type ,
+        bco.order_status,
+        bco.order_repay_type,
+        bco.order_periods ,
+        bco.order_now_periods,
+        brs.id
+        ORDER BY bco.id DESC
+    </select>
+
+    <select id="selectOrderReplayInfo" parameterType="Map" resultType="com.fintecher.manage.vo.OrderRepaySchemeModel">
+    SELECT
+        expense_id AS expenseId,
+        repay_template_id AS repayTemplateId,
+        orderId,
+        repay_status AS repayStatus,
+        expense_name AS expenseName,
+        sum( is_repay_money ) AS isRepayMoney,
+        sum( repay_money ) AS RepayMoney,
+        sum( repay_money ) - sum( IFNULL( is_repay_money, 0 ) ) AS money
+    FROM
+        basic_order_repay_scheme
+    WHERE
+        order_id = #{orderId}
+        AND periods = #{periods}
+    GROUP BY
+        expense_id,
+        repay_template_id,
+        order_id,
+        repay_status,
+        expense_name
+    </select>
+
+    <select id="selectOrderRepaySchemeByOrderId" parameterType="java.lang.Long"
+            resultType="com.fintecher.entity.BasicOrderRepayScheme">
+         select
+          id,
+          expense_id as expenseId,
+          repay_template_id as  repayTemplateId,
+          order_id as  orderId,
+          periods as  periods,
+          repay_money as  repayMoney,
+          is_repay_money as isRepayMoney,
+          repay_status as repayStatus,
+          expense_name as expenseName,
+          expense_code as expenseCode,
+          operator as operator,
+          operator_time as  operatorTime,
+          remark from basic_order_repay_scheme
+        where order_id=#{orderId}
+    </select>
+    <update id="updateRepaymentDate" parameterType="Map">
+        update basic_order_repay_scheme set repayment_date =#{repaymentDate}
+         where order_id=#{orderId} AND periods=#{periods}
+    </update>
+    <update id="updateOverdueCheck" parameterType="java.lang.String">
+        UPDATE basic_order_repay_scheme
+        SET repay_status = 10119
+        WHERE
+        repayment_date <![CDATA[ < ]]> #{repaymentDate}
+            AND repay_status NOT IN ( 10118, 10121, 10122 )
+    </update>
+
+    <delete id="deleteOverdue">
+        delete from basic_order_repay_scheme
+        where
+        repay_status=10119 AND
+        (expense_code="fj" or expense_code="fx")
+    </delete>
+    <select id="selectOrderRepayInfo" parameterType="Map" resultType="com.fintecher.entity.BasicOrderRepayScheme">
+        select
+          id,
+          expense_id as expenseId,
+          repay_template_id as  repayTemplateId,
+          order_id as  orderId,
+          periods as  periods,
+          repay_money as  repayMoney,
+          IFNULL(is_repay_money,0) as isRepayMoney,
+          repay_status as repayStatus,
+          expense_name as expenseName,
+          expense_code as expenseCode,
+          operator as operator,
+          operator_time as  operatorTime,
+          remark from basic_order_repay_scheme
+        where order_id=#{orderId} AND periods <![CDATA[ <= ]]> #{periods}
+     </select>
+    <select id="selectNeedRepayMoney" parameterType="java.lang.Long" resultType="java.math.BigDecimal">
+       SELECT
+	 IFNULL( sum( repay_money ) , 0 ) - IFNULL( sum( is_repay_money), 0 ) repayMoney
+    FROM
+        basic_order_repay_scheme
+    WHERE
+	order_id = #{orderId}
+	AND periods !=0
+	AND repay_money>=0
+    </select>
+</mapper>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.RoleMapper">
+
+    <!--根据用户ID查询角色对象信息-->
+    <select id="findRoleByUserId" parameterType="java.lang.Long" resultType="com.fintecher.entity.SysRole">
+        SELECT id AS id, org_id AS orgId, role_name AS roleName ,role_status AS roleStatus, dept_id AS deptId FROM sys_role WHERE id IN (SELECT role_id FROM sys_user_role WHERE user_id = #{userId})
+    </select>
+    <!--查找角色下的所有用户-->
+    <select id="getUserByRoleId" parameterType="map" resultType="com.fintecher.manage.vo.RoleIdFindUsersModel">
+        SELECT
+        sysUser.id AS userId,
+        sysUser.user_username AS userName,
+        sysUser.user_realname AS realName,
+        sysUser.user_phone AS userPhone,
+        sysUser.user_email AS userEmail,
+        department.org_name AS deptName
+        FROM
+        sys_user sysUser
+        LEFT JOIN sys_user_role ON sys_user_role.user_id = sysUser.id
+        LEFT JOIN sys_org department ON department.id = sysUser.dept_id
+        WHERE sys_user_role.role_id = #{roleId}
+        <!-- WHERE u.id != 1-->
+        <if test="userName != null">
+            AND sysUser.user_username LIKE CONCAT('%',#{userName},'%')
+        </if>
+        <if test="realName != null">
+            AND sysUser.user_realname LIKE CONCAT('%',#{realName},'%')
+        </if>
+    </select>
+    <!--获取数据权限下的所有角色-->
+    <select id="findAllSysRole" parameterType="map" resultType="com.fintecher.manage.vo.SysRoleModel">
+        SELECT
+        role.org_id AS orgId,
+        (SELECT org_name FROM sys_org WHERE id = role.org_id) AS orgName,
+        role.id AS id,
+        role.role_name AS roleName,
+        role.role_desc AS roleDesc,
+        role.role_status AS roleStatus,
+        role.dept_id AS deptId,
+        (SELECT org_name FROM sys_org WHERE id = role.dept_id) AS deptName,
+        u.user_realname AS operatorName,
+        role.operator_time AS operatorTime
+        FROM sys_role role
+        LEFT JOIN sys_user u ON role.operator = u.id
+        LEFT JOIN sys_org org ON role.dept_id = org.id
+        <where>
+            <if test="dataAuth != null">
+                <foreach collection="dataAuth" item="item" open="AND (" close=")" separator="OR">
+                    org.org_tree_code LIKE CONCAT(#{item}, '%')
+                </foreach>
+            </if>
+            <if test="exceptDataAuth != null">
+                <foreach collection="exceptDataAuth" item="item" open="AND (" close=")" separator="AND">
+                    org.org_tree_code NOT LIKE CONCAT(#{item}, '%')
+                </foreach>
+            </if>
+            <if test="params.roleName != null and params.roleName != ''">
+                AND role.role_name LIKE CONCAT('%', #{params.roleName}, '%')
+            </if>
+            <if test="params.roleStatus != null and params.roleStatus != ''">
+                AND role.role_status = #{params.roleStatus}
+            </if>
+        </where>
+    </select>
+
+    <!--获取数据权限下的所有的启用的角色-->
+    <select id="findAllEnableRoleByAuth" parameterType="map" resultType="com.fintecher.entity.SysRole">
+        SELECT
+        role.id AS id,
+        role.role_name AS roleName,
+        role.role_status AS roleStatus,
+        role.role_desc AS roleDesc
+        FROM sys_role role
+        LEFT JOIN sys_org org ON role.org_id = org.id
+        <where>
+            role.role_status = 10022
+            <if test="dataAuth != null">
+                <foreach collection="dataAuth" item="item" open="AND (" close=")" separator="OR">
+                    org.org_tree_code LIKE CONCAT(#{item}, '%')
+                </foreach>
+            </if>
+            <if test="exceptDataAuth != null">
+                <foreach collection="exceptDataAuth" item="item" open="AND (" close=")" separator="AND">
+                    org.org_tree_code NOT LIKE CONCAT(#{item}, '%')
+                </foreach>
+            </if>
+            <if test="roleName != null and roleName != ''">
+                AND role.role_name LIKE CONCAT('%', #{roleName}, '%')
+            </if>
+        </where>
+    </select>
+</mapper>

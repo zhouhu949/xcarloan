@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.CarModelMapper">
+
+    <resultMap id="carModelInfo" type="com.fintecher.manage.vo.CarModelInfo">
+        <id column="modelId" property="modelId"/>
+        <result column="modelName" property="modelName"/>
+        <result column="referencePrice" property="referencePrice"/>
+        <result column="modelColors" property="modelColors"/>
+        <result column="seriesId" property="seriesId"/>
+        <result column="brandId" property="brandId"/>
+        <result column="brandName" property="brandName"/>
+        <result column="seriesName" property="seriesName"/>
+        <collection property="carmodelParams" ofType="map" select="carModelConfig" column="modelId">
+        </collection>
+        <collection property="carIntroduceList" ofType="map" select="carModelIntroduce" column="modelId">
+        </collection>
+    </resultMap>
+
+    <!--根据车型查询车辆相关信息-->
+    <select id="findCarModel" parameterType="java.lang.Long" resultMap="carModelInfo">
+        SELECT
+        model.id AS modelId,
+        model.model_name AS modelName,
+        model.reference_price AS referencePrice,
+        model.model_colors AS modelColors,
+        series.id AS seriesId,
+        series.series_name AS seriesName,
+        brand.id AS brandId,
+        brand.brand_name AS brandName
+        FROM basic_car_model model
+        LEFT JOIN basic_car_brand_series series ON model.series_id = series.id
+        LEFT JOIN basic_car_brand brand ON series.brand_id = brand.id
+        WHERE model.id = #{modelId}
+    </select>
+
+    <select id="carModelConfig" parameterType="java.lang.Long" resultType="map">
+        SELECT
+        car_param_name AS carParamName,
+        car_param_value AS carParamValue,
+        remark as remark
+        FROM basic_carmodel_param WHERE id = #{modelId}
+    </select>
+
+    <select id="carModelIntroduce" parameterType="java.lang.Long" resultType="map">
+        SELECT
+        introduce_name AS introduceName,
+        introduce_url AS introduceUrl
+        FROM basic_car_introduce WHERE id = #{modelId}
+    </select>
+
+    <select id="getCarModelListByOrg" parameterType="map" resultType="com.fintecher.manage.vo.CarInfoModel">
+        SELECT
+        model.id AS modelId,
+        model.model_name AS modelName,
+        model.reference_price AS referencePrice,
+        model.model_colors AS modelColors,
+        series.series_name AS seriesName,
+        brand.brand_name AS brandName
+        FROM basic_car_model model
+        LEFT JOIN basic_car_brand_series series ON model.series_id = series.id
+        LEFT JOIN basic_car_brand brand ON series.brand_id = brand.id
+        WHERE brand.org_id = #{orgId}
+        <if test="brandName != null and brandName != ''">
+            AND brand.brand_name LIKE CONCAT('%', #{brandName}, '%')
+        </if>
+        <if test="seriesName != null and seriesName != ''">
+            AND series.series_name LIKE CONCAT('%', #{seriesName}, '%')
+        </if>
+        <if test="modelName != null and modelName != ''">
+            AND model.model_name LIKE CONCAT('%', #{modelName}, '%')
+        </if>
+    </select>
+</mapper>

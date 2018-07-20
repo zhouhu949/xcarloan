@@ -7,7 +7,7 @@ import java.util.Objects;
  * Created by ChenChang on 2017/3/9.
  */
 public enum Status {
-    Enable(0), Disable(1);
+    Enable(10002), Disable(10003);
     private Integer value;
 
     Status(Integer value) {
@@ -19,17 +19,14 @@ public enum Status {
     }
 
     /**
-     * 通过Integer值查询枚举
-     *
-     * @param value
-     * @return
+     * 判断参数合法性
      */
-    public static Status getStateByValue(Integer value) {
-        for (Status state : Status.values()) {
-            if (Objects.equals(value, state.getValue())) {
-                return state;
+    public static boolean isValidValue(Integer value) {
+        for (Status status : Status.values()) {
+            if (Objects.equals(status.getValue(), value)) {
+                return true;
             }
         }
-        return Disable;
+        return false;
     }
 }

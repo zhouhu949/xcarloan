@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.DataDictMapper">
+    <!--获取全部系统字典-->
+    <select id="getAll" resultType="com.fintecher.entity.SysDictItem">
+        SELECT
+        a.id,
+        a.org_id AS orgId,
+        a.dict_id as dictId,
+        a.dict_item_name as dictItemName,
+        a.dict_item_code as dictItemCode,
+        a.dict_item_tree_code as dictItemTreeCode,
+        a.dict_item_status as dictItemStatus
+        FROM sys_dict_item a
+        LEFT JOIN sys_dict b ON a.dict_id = b.id
+        WHERE b.dict_type = 10000
+        ORDER BY a.dict_item_tree_code ASC
+    </select>
+    <!--获取全部自定义字典-->
+    <select id="findAll" resultType="com.fintecher.entity.SysDictItem">
+        SELECT
+        a.id,
+        a.org_id AS orgId,
+        a.dict_id as dictId,
+        a.dict_item_name as dictItemName,
+        a.dict_item_code as dictItemCode,
+        a.dict_item_tree_code as dictItemTreeCode,
+        a.dict_item_status as dictItemStatus
+        FROM sys_dict_item a
+        LEFT JOIN sys_dict b ON a.dict_id = b.id
+        WHERE b.dict_type = 10001
+        ORDER BY a.dict_item_tree_code ASC
+    </select>
+
+    <!--通过数据字典类型id获取数据字典列表-->
+    <select id="findDataDictByTypeCode" resultType="com.fintecher.entity.SysDictItem">
+        SELECT
+        a.id,
+        a.org_id AS orgId,
+        a.dict_id as dictId,
+        a.dict_item_name as dictItemName,
+        a.dict_item_code as dictItemCode,
+        a.dict_item_tree_code as dictItemTreeCode,
+        a.dict_item_status as dictItemStatus
+        FROM sys_dict_item a
+        LEFT JOIN sys_dict b ON a.dict_id = b.id
+        WHERE b.id = #{id} and b.dict_type=10001
+        <if test="dictItemName != null">
+            AND a.dict_item_name LIKE concat('%',#{dictItemName},'%')
+        </if>
+        ORDER BY a.dict_item_tree_code ASC
+    </select>
+
+    <!--通过TypeCode获取数据字典列表-->
+    <select id="getSysDictList" resultType="com.fintecher.entity.SysDictItem">
+        SELECT
+        a.id,
+        a.org_id AS orgId,
+        a.dict_id as dictId,
+        a.dict_item_name as dictItemName,
+        a.dict_item_code as dictItemCode,
+        a.dict_item_tree_code as dictItemTreeCode,
+        a.dict_item_status as dictItemStatus
+        FROM sys_dict_item a
+        LEFT JOIN sys_dict b ON a.dict_id = b.id
+        WHERE b.id = #{id}  and b.dict_type=10000
+    </select>
+
+    <!-- 获取数据字典项最大ID -->
+    <select id="getMaxId" resultType="Integer">
+        SELECT max(dict_item_code) FROM sys_dict_item
+    </select>
+
+    <!-- 获取最大排序 -->
+    <select id="getMaxSort" parameterType="String" resultType="Integer">
+        SELECT max(dict_sort) from sys_dict_item where dict_type = #{typeCode}
+    </select>
+
+    <!--根据字典类型查询-->
+    <select id="findDataDictByType" resultType="com.fintecher.entity.SysDictItem">
+    SELECT
+     a.id,
+     a.org_id AS orgId,
+     a.dict_id as dictId,
+     a.dict_item_name as dictItemName,
+     a.dict_item_code as dictItemCode,
+     a.dict_item_tree_code as dictItemTreeCode,
+     a.dict_item_status as dictItemStatus
+     FROM sys_dict_item a
+    LEFT JOIN sys_dict b ON a.dict_id = b.id
+    WHERE b.dict_type = #{dictType}
+
+    </select>
+    <!--根据名称查询字典项-->
+    <select id="queryDictItemName" resultType="com.fintecher.entity.SysDictItem">
+        SELECT a.dict_item_name as dictItemName from sys_dict_item a left JOIN sys_dict b ON a.dict_id = b.id where a.dict_id = #{id}
+   </select>
+</mapper>

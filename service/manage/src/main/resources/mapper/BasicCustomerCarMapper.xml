@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.BasicCustomerCarMapper">
+<!--查询评估状态-->
+    <select id="findByStatus" resultType="com.fintecher.entity.BasicCustomerCarAssessment">
+        SELECT a.assessment_status FROM basic_customer_car_assessment a LEFT JOIN basic_customer_car b
+        ON a.car_id = b.id
+         WHERE b.id = #{id}
+    </select>
+    <!--获取客户车产列表信息-->
+    <select id="getBasicCustomerCarList" resultType="map">
+        SELECT
+        a.buy_type as buyType,
+        a.car_no AS carNo,
+        a.car_price as carPrice ,
+        a.car_status as carStatus,
+        a.car_type as carType,
+        a.id as id,
+        a.is_loan_finished as isLoanFinished,
+        a.is_second_hand as isSecondHand,
+        a.mortgage_num as mortgageNum,
+        a.operator as operator,
+        a.operator_time as operatorTime,
+        a.register_time as registerTime,
+        a.remark as remark
+        from basic_customer_car a
+        LEFT JOIN basic_customer b on a.customer_id = b.id
+        WHERE b.id = #{id}
+    </select>
+</mapper>

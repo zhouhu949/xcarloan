@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.FinanceRefundMapper">
+
+    <select id="selectSchemeExpense" parameterType="Map" resultType="com.fintecher.entity.BasicRepaySchemeExpense">
+    SELECT
+	a.expense_id AS expenseId,
+	a.repay_proportion AS repayProportion,
+	a.fixed_cost AS fixedCost
+    FROM
+	basic_repay_scheme_expense a
+	LEFT JOIN basic_customer_order b ON b.scheme_id = a.scheme_id
+    WHERE
+	is_refund =#{yes}
+	AND b.id =#{orderId}
+    </select>
+	<select id="selectMoney" parameterType="Map" resultType="java.math.BigDecimal">
+		SELECT
+		sum((IFNULL(a.repay_proportion,0)*#{money})+a.fixed_cost) as money
+		FROM
+			basic_repay_scheme_expense a
+			LEFT JOIN basic_customer_order b ON b.scheme_id = a.scheme_id
+		WHERE
+			is_refund =#{yes}
+			AND b.id =#{orderId}
+	</select>
+
+	<select id="selectRefundExpense" parameterType="Map" resultType="com.fintecher.manage.vo.RefundExpenseModel">
+		SELECT
+		c.expense_name as expenseName,(IFNULL(a.repay_proportion,0)*#{money})+IFNULL(a.fixed_cost,0) as money
+		FROM
+			basic_repay_scheme_expense a
+			LEFT JOIN basic_customer_order b ON b.scheme_id = a.scheme_id
+			LEFT JOIN basic_expense c on c.id =a.expense_id
+		WHERE
+			is_refund =#{yes}
+			AND b.id =#{orderId}
+	</select>
+	<select id="queryRefundBackMoney" parameterType="Map" resultType="java.math.BigDecimal">
+		SELECT
+		(IFNULL(a.repay_proportion,0)*#{money})+IFNULL(a.fixed_cost,0) as money
+		FROM
+			basic_repay_scheme_expense a
+			LEFT JOIN basic_customer_order b ON b.scheme_id = a.scheme_id
+			LEFT JOIN basic_expense c on c.id =a.expense_id
+		WHERE
+			 b.id =#{orderId} and c.expense_code = #{expenseCode}
+	</select>
+	<select id="queryFinancialRefund" parameterType="Map" resultType="com.fintecher.manage.vo.FinanceRefundModel">
+		SELECT
+		frd.id AS id,
+		frd.refund_detial_money AS refundDetialMoney,
+		fr.refund_date AS refundDate,
+		expense.expense_name AS expenseName,
+		expense.expense_code AS expenseCode
+		FROM
+		finance_refund_detial frd
+		LEFT JOIN finance_refund fr ON fr.id = frd.refund_id
+		LEFT JOIN basic_expense expense ON expense.id = frd.expense_id
+		LEFT JOIN sys_org org ON fr.org_id = org.id
+		where  fr.order_id=#{orderId}
+		<if test="dataAuth.size() > 0">
+			<foreach collection="dataAuth" item="item" open="AND (" close=")" separator="OR">
+				org.org_tree_code LIKE CONCAT(#{item}, '%')
+			</foreach>
+		</if>
+		<if test="exceptDataAuth.size() > 0">
+			<foreach collection="exceptDataAuth" item="item" open="AND (" close=")" separator="AND">
+				org.org_tree_code NOT LIKE CONCAT(#{item}, '%')
+			</foreach>
+		</if>
+	</select>
+</mapper>

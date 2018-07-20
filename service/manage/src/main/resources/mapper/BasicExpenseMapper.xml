@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fintecher.manage.mapper.BasicExpenseMapper">
+
+    <insert id="save" parameterType="com.fintecher.entity.BasicExpense">
+      insert into basic_expense (
+      `org_id` ,
+      `expense_template_id` ,
+      `expense_name` ,
+      `expense_code` ,
+      `is_system` ,
+       `remark`,
+      `operator`,
+      `operator_time`
+       ) values(
+      #{orgId,jdbcType=BIGINT},
+      #{expenseTemplateId ,jdbcType=BIGINT},
+      #{expenseName ,jdbcType=VARCHAR},
+      #{expenseCode ,jdbcType=VARCHAR},
+      #{isSystem ,jdbcType=TINYINT},
+      #{remark ,jdbcType=VARCHAR},
+      #{operator ,jdbcType=BIGINT},
+      #{operatorTime ,jdbcType= TIMESTAMP})
+    </insert>
+
+
+    <update id="updatePrimaryKey" parameterType="com.fintecher.entity.BasicExpense">
+        update basic_expense
+        <set>
+            <if test="expenseName!=null">expense_name=#{expenseName},</if>
+            <if test="remark!=null">remark=#{remark},</if>
+            <if test="operator!=null">operator=#{operator},</if>
+            <if test="operatorTime!=null">operator_time=#{operatorTime},</if>
+        </set>
+        where id=#{id}
+    </update>
+    <delete id="deletePrimaryKey" parameterType="com.fintecher.entity.BasicExpense">
+        delete from  basic_expense where id=#{id}
+    </delete>
+
+
+    <select id="check" parameterType="com.fintecher.entity.BasicExpense" resultType="java.lang.Integer">
+       SELECT (a.total + b.total) as total FROM(SELECT count(expense_id) total FROM basic_offset_item  where expense_id=#{id}) a,
+       (SELECT count(expense_id) total FROM basic_offset_item where expense_id=#{id} ) b
+    </select>
+
+
+    <insert id="copyTemplate" parameterType="com.fintecher.entity.BasicExpense">
+        insert into basic_expense (org_id ,expense_template_id ,expense_name ,expense_code ,remark, is_system,operator,operator_time)(
+        select #{orgId}, id as expense_template_id,expense_template_name as expense_name,expense_template_code as expense_code,
+        remark,#{isSystem},#{operator},#{operatorTime} from basic_expense_template a where
+        a.expense_template_code not in (select expense_code from basic_expense))
+    </insert>
+
+    <!--获取数据权限下的所有费用项-->
+    <select id="findBasicExpenseByAuth" parameterType="map" resultType="com.fintecher.entity.BasicExpense">
+        SELECT
+        e.id AS id,
+        e.expense_template_id AS expenseTemplateId,
+        e.expense_name AS expenseName,
+        e.expense_code AS expenseCode,
+        e.is_system AS isSystem,
+        e.remark AS remark
+        FROM basic_expense e
+        LEFT JOIN sys_org org ON e.org_id = org.id
+        <where>
+            <if test="dataAuth != null">
+                <foreach collection="dataAuth" item="item" open="AND (" close=")" separator="OR">
+                    org.org_tree_code LIKE CONCAT(#{item}, '%')
+                </foreach>
+            </if>
+            <if test="exceptDataAuth != null">
+                <foreach collection="exceptDataAuth" item="item" open="AND (" close=")" separator="AND">
+                    org.org_tree_code NOT LIKE CONCAT(#{item}, '%')
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <select id="updateCheck" parameterType="com.fintecher.entity.BasicExpense" resultType="int">
+          select count(id) from basic_expense where id!=#{id} and expense_name=#{expenseName}
+    </select>
+
+    <select id="addCheck" parameterType="com.fintecher.entity.BasicExpense" resultType="int">
+         select count(id) from basic_expense where expense_name=#{expenseName} or expense_code=#{expenseCode}
+    </select>
+    <select id="selectOffsetExpense" resultType="com.fintecher.entity.BasicExpense">
+      SELECT
+        id,
+        expense_code AS expenseCode,
+        expense_name AS expenseName
+      FROM basic_expense
+      WHERE org_id = #{orgId}
+      AND expense_code IN ( 'bj', 'lx', 'fx', 'tqjqsxf', 'fj' )
+    </select>
+
+    <update id="insertOverdueFine" parameterType="Map">
+        insert into basic_order_repay_scheme (
+        order_id,
+        periods,
+        repay_money,
+        repay_status,
+        expense_id,
+        expense_name,
+        expense_code,
+        operator,
+        operator_time
+    ) (
+	SELECT
+        bors.order_id AS order_id,
+        bors.periods AS periods,
+        max( brse.repay_proportion ) * ( sum( bors.repay_money ) - ifnull( sum( bors.is_repay_money ), 0 ) ) AS repay_money ,
+       #{repayStatus},
+        expense.id as expense_id,
+        expense.expense_name as expense_name,
+        expense.expense_code as expense_code,
+        #{operator},
+        #{operatorTime}
+	FROM
+		basic_order_repay_scheme bors
+		LEFT JOIN basic_customer_order bco ON bco.id = bors.order_id
+		LEFT JOIN basic_repay_scheme_expense brse ON brse.scheme_id = bco.scheme_id
+		LEFT JOIN basic_expense expense on expense.id=brse.expense_id
+		where bors.repay_status=#{repayStatus} AND expense.expense_code=#{expenseCode}
+	GROUP BY
+		bors.order_id,
+		bors.periods,
+		#{repayStatus},
+		expense.id,
+		expense.expense_name,
+		expense.expense_code,
+		#{operator},
+        #{operatorTime}
+)
+    </update>
+</mapper>

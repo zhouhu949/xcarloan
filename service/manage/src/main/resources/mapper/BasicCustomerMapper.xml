@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.BasicCustomerMapper">
+<!--客户列表-->
+    <select id="queryCustomerByCondition" resultType="com.fintecher.manage.vo.BasicCustomerModel">
+    SELECT customer.id,customer.org_id orgId,customer.customer_name customerName,customer.customer_sex customerSex,customer.id_card idCard,
+        customer.customer_phone customerPhone,customer.customer_status customerStatus,customer.account_status accountStatus,
+        customer.operator operator,sysUser.user_realname operatorName
+    FROM basic_customer customer left join sys_user sysUser on customer.operator=sysUser.id
+
+    WHERE  customer.org_id=#{orgId}
+
+        <if test="customerStatus !=null">
+            AND  customer.customer_Status = #{customerStatus}
+        </if>
+
+        <if test="customerName !=null">
+            AND  customer.customer_Name LIKE CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="idCard !=null">
+            AND  customer.id_card LIKE CONCAT('%',#{idCard},'%')
+        </if>
+        <if test="customerPhone !=null">
+            AND  customer.customer_phone LIKE CONCAT('%',#{customerPhone},'%')
+        </if>
+    order by customer.operator_time
+    </select>
+    <select id="findNotBlackCustomerList" resultType="com.fintecher.manage.vo.BasicCustomerModel">
+
+        SELECT customer.id as customerId,
+        customer.org_id orgId,
+        customer.customer_name customerName,
+        customer.customer_sex customerSex,customer.id_card idCard,
+        customer.customer_phone customerPhone,customer.customer_status customerStatus,customer.account_status accountStatus,
+        customer.operator operator,sysUser.user_realname operatorName
+    FROM basic_customer customer left join sys_user sysUser on customer.operator=sysUser.id
+
+    WHERE  customer.org_id=#{orgId}
+
+         AND  customer.customer_Status != #{customerStatus}
+
+        <if test="customerName !=null">
+            AND  customer.customer_name LIKE CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="customerPhone !=null">
+            AND customer.customer_phone LIKE CONCAT('%',#{customerPhone},'%')
+        </if>
+        <if test="idCard !=null">
+            AND  customer.id_card LIKE CONCAT('%',#{idCard},'%')
+        </if>
+    order by customer.operator_time
+    </select>
+    <!--客户订单列表-->
+    <select id="findBasicCustomerOrderList" resultType="com.fintecher.manage.vo.BasicCustomerOrderModel">
+       SELECT a.customer_id as customerId,
+       a.operator,
+       a.id as orderId,
+       a.operator_time as operatorTime,
+       a.order_no as orderNo,
+       a.order_price as orderPrice,
+       a.order_type as orderType,
+        a.order_repay_type as orderRepayType,
+        b.customer_code as customerCode,
+        b.customer_name as customerName,
+        b.org_id as orgId,
+        b.customer_status as customerStatus
+        from basic_customer_order a LEFT JOIN basic_customer b ON a.customer_id = b.id WHERE b.id = #{id}
+        ORDER BY a.operator_time DESC
+
+
+    </select>
+
+    <select id="findCustomerSignList" resultType="com.fintecher.manage.vo.CustomerOrderSignListModel">
+        SELECT
+        customer.customer_name customerName,
+        customer.id_card idCard,
+        customer.customer_phone customerPhone,
+        customer.account_status accountStatus,
+        customer.id as customerId,
+        customer.message_addr as messageAddr,
+        customer.local_home_addr as localHomeAddr,
+        customer.id_card_validity_period_type as idCardValidityPeriodType,
+        customer.house_prospecting as houseProspecting,
+        customer.home_status as homeStatus,
+        customer.education as education,
+        customer.customer_status as customerStatus,
+        o.id as orderId,
+        o.order_no as orderNo,
+        o.order_type as orderType,
+        o.order_periods as orderPeriods,
+        COUNT(c.order_id) as fileCount
+        FROM basic_customer customer LEFT JOIN basic_customer_order o on customer.id = o.customer_id
+        LEFT JOIN basic_order_file c ON c.order_id = o.id
+        WHERE customer.account_status = 10093
+        GROUP BY c.order_id,customer.id,o.id ORDER BY o.operator_time DESC
+
+        <if test="customerName !=null">
+        AND customer.customer_name LIKE CONCAT('%',#{customerName},'%')
+    </if>
+
+
+    </select>
+
+    <select id="findCustomerIntentionList" resultType="com.fintecher.manage.vo.CustomerIntentionModel">
+        SELECT
+        a.id as id,a.customer_name customerName,a.customer_sex customerSex,a.id_card idCard,
+        a.customer_phone customerPhone,
+        c.intention_type as intentionType,
+        c.intention_level as intentionLevel,
+        d.follow_result as followResult,
+        d.is_last_intention as isLastIntention
+        FROM basic_customer a left join sys_user b on a.operator = b.id
+        LEFT JOIN basic_customer_intention c ON (a.id = c.customer_id and c.is_last_intention = 10002)
+        LEFT JOIN basic_customer_follow d on (c.id = d.intention_id and d.is_last_intention = 10002)
+        WHERE a.org_id=#{orgId}
+        <if test="customerStatus !=null">
+            AND  a.customer_status LIKE CONCAT('%',#{customerStatus},'%')
+        </if>
+        <if test="customerName !=null">
+            AND  a.customer_Name LIKE CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="customerPhone !=null">
+            AND  a.customer_phone LIKE CONCAT('%',#{customerPhone},'%')
+        </if>
+        <if test="idCard !=null">
+            AND  a.id_card LIKE CONCAT('%',#{idCard},'%')
+        </if>
+    </select>
+
+    <!--根据订单id获取客户信息-->
+    <select id="findCustomerInfoByOrderId" resultType="com.fintecher.entity.BasicCustomer">
+        SELECT  customer.id,
+        customer.customer_name customerName,
+        customer.customer_sex customerSex,
+        customer.id_card idCard,
+        customer.customer_phone customerPhone,
+        customer.customer_status customerStatus,
+        customer.account_status accountStatus,
+        customer.customer_phone as customerPhone,
+        customer.operator,
+        customer.operator_time as operatorTime
+    FROM basic_customer customer LEFT JOIN basic_customer_order o on customer.id = o.customer_id
+    WHERE o.id = #{orderId}
+    </select>
+    <!--获取手机号/身份证号信息-->
+    <select id="findCustomerInfoByCustomer" resultType="com.fintecher.entity.BasicCustomer">
+        select id,org_id,customer_name from basic_customer where customer_phone = #{customerPhone} or id_card = #{idCard};
+    </select>
+</mapper>

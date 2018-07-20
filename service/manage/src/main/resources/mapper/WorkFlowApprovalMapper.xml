@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.WorkFlowApprovalMapper">
+
+    <select id="queryAllWaitApprovalByAuth" parameterType="map" resultType="com.fintecher.manage.vo.ApprovalOrderModel">
+        SELECT
+        bc.id AS customerId,
+        bc.customer_name AS customerName,
+        bc.id_card AS idCard,
+        bc.customer_phone AS customerPhone,
+        bco.id AS orderId,
+        bco.order_no AS orderNo,
+        bco.order_type AS orderType,
+        bco.order_status AS orderStatus,
+        bco.order_repay_type AS orderRepayType,
+        bco.order_periods AS orderPeriods,
+        bco.order_price AS orderPrice,
+        brs.id AS schemeId,
+        brs.scheme_name AS schemeName,
+        bco.work_flow_link_name AS workFlowLinkName
+        FROM basic_customer_order bco
+        LEFT JOIN basic_repay_scheme brs ON bco.scheme_id = brs.id
+        LEFT JOIN basic_customer bc ON bco.customer_id = bc.id
+        LEFT JOIN sys_org org ON bco.org_id = org.id
+        <where>
+            bco.order_status = 10108
+            <if test="dataAuth != null">
+                <foreach collection="dataAuth" item="item" open="AND (" close=")" separator="OR">
+                    org.org_tree_code LIKE CONCAT(#{item}, '%')
+                </foreach>
+            </if>
+            <if test="exceptDataAuth != null">
+                <foreach collection="exceptDataAuth" item="item" open="AND (" close=")" separator="AND">
+                    org.org_tree_code NOT LIKE CONCAT(#{item}, '%')
+                </foreach>
+            </if>
+            <if test="params.customerName != null and params.customerName != ''">
+                AND bc.customer_name LIKE CONCAT('%',#{params.customerName} ,'%')
+            </if>
+            <if test="params.orderNo != null and params.orderNo != ''">
+                AND bco.order_no LIKE CONCAT('%',#{params.orderNo} ,'%')
+            </if>
+            <if test="params.idCard != null and params.idCard != ''">
+                AND bc.id_card LIKE CONCAT('%',#{params.idCard} ,'%')
+            </if>
+            <if test="params.customerPhone != null and params.customerPhone != ''">
+                AND bc.customer_phone LIKE CONCAT('%',#{params.customerPhone} ,'%')
+            </if>
+        </where>
+        ORDER BY bco.id DESC
+    </select>
+
+    <select id="queryWaitApproval" parameterType="map" resultType="com.fintecher.manage.vo.ApprovalOrderModel">
+        SELECT
+        bc.id AS customerId,
+        bc.customer_name AS customerName,
+        bc.id_card AS idCard,
+        bc.customer_phone AS customerPhone,
+        bco.id AS orderId,
+        bco.order_no AS orderNo,
+        bco.order_type AS orderType,
+        bco.order_status AS orderStatus,
+        bco.order_repay_type AS orderRepayType,
+        bco.order_periods AS orderPeriods,
+        bco.order_price AS orderPrice,
+        brs.id AS schemeId,
+        brs.scheme_name AS schemeName,
+        bco.work_flow_link_name AS workFlowLinkName
+        FROM basic_customer_order bco
+        LEFT JOIN basic_repay_scheme brs ON bco.scheme_id = brs.id
+        LEFT JOIN basic_customer bc ON bco.customer_id = bc.id
+        LEFT JOIN sys_org so ON bco.org_id = so.id
+        <where>
+            <if test="processInstanceIds != null and processInstanceIds.size() > 0">
+                bco.work_flow_id IN
+                <foreach collection="processInstanceIds" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="customerName != null and customerName != ''">
+                AND bc.customer_name LIKE CONCAT('%',#{customerName} ,'%')
+            </if>
+            <if test="orderNo != null and orderNo != ''">
+                AND bco.order_no LIKE CONCAT('%',#{orderNo} ,'%')
+            </if>
+            <if test="idCard != null and idCard != ''">
+                AND bc.id_card LIKE CONCAT('%',#{idCard} ,'%')
+            </if>
+            <if test="customerPhone != null and customerPhone != ''">
+                AND bc.customer_phone LIKE CONCAT('%',#{customerPhone} ,'%')
+            </if>
+        </where>
+        ORDER BY bco.id DESC
+    </select>
+</mapper>

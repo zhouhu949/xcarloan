@@ -8,10 +8,10 @@ spring:
         default-property-inclusion: non_null
     redis:
         database: 13
-        host: 192.168.3.2
+        host: 192.168.22.194
         port: 6379
-        sysName: manange
-        password: redis123456
+  #      sysName: manange
+  #      password: redis123456
         pool:
           #连接池支持的最大连接数
           max-active: 600
@@ -51,13 +51,6 @@ hystrix:
         isolation:
           thread:
             timeoutInMilliseconds: 60000
-#zuul:
-#  max:
-#    host:
-#      connections: 5000
-#  host:
-#    socket-timeout-millis: 60000
-#    connect-timeout-millis: 60000
 
 ribbon:
   ReadTimeout: 60000
@@ -79,6 +72,7 @@ feign:
 info:
   name: 网关服务
   desc: 网关服务是所有接口的主入口
+
 zuul:
   sensitive-headers: Cookie,Set-Cookie
-
+  servlet-path: /

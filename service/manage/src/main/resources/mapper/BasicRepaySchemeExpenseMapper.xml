@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.BasicRepaySchemeExpenseMapper">
+
+    <select id="findRepaySchemeInfo" parameterType="java.lang.Long" resultType="com.fintecher.manage.vo.RepaySchemeInfoModel">
+        SELECT
+        be.expense_code AS expenseCode,
+        scheme.scheme_type AS schemeType
+        FROM basic_repay_scheme_expense expense
+        LEFT JOIN basic_expense be ON expense.expense_id = be.id
+        LEFT JOIN basic_repay_scheme scheme ON expense.scheme_id = scheme.id
+        WHERE expense.id = #{id}
+    </select>
+
+    <select id="findRepaySchemeExpenseInfo" parameterType="java.lang.Long" resultType="com.fintecher.manage.vo.RepayExpenseInfoModel">
+        SELECT
+        expense.id as id,
+        be.id AS expenseId,
+        expense.is_first AS isFirst,
+        expense.repay_proportion AS repayProportion,
+        expense.fixed_cost AS fixedCost,
+        expense.repay_type AS repayType,
+        expense.is_last AS isLast,
+        expense.is_refund AS isRefund,
+        expense.remark AS remark,
+        expense.operator AS operartor,
+        u.user_realname AS operatorName,
+        expense.operator_time AS operatorTime,
+        be.expense_code AS expenseCode,
+        be.expense_name AS expenseName
+        FROM basic_repay_scheme_expense expense
+        LEFT JOIN basic_expense be ON expense.expense_id = be.id
+        LEFT JOIN basic_repay_scheme scheme ON expense.scheme_id = scheme.id
+        LEFT JOIN sys_user u ON expense.operator = u.id
+        WHERE expense.scheme_id = #{schemeId}
+    </select>
+
+    <select id="selectExpense" parameterType="Map" resultType="com.fintecher.entity.BasicRepaySchemeExpense">
+          select a.id as id,
+          a.scheme_id as schemeId,
+          a.expense_id as expenseId,
+          a.is_first as isFirst,
+          a.repay_proportion as repayProportion,
+          a.fixed_cost as fixedCost,
+          a.repay_type as repayType,
+          a.is_last as isLast,
+          a.is_refund as isRefund,
+          a.remark as remark,
+          a.operator as operator,
+          a.operator_time as operatorTime  from basic_repay_scheme_expense a
+          left join basic_expense b on a.expense_id=b.id where a.scheme_id=#{id} and b.expense_code=#{expenseCode}
+    </select>
+
+</mapper>

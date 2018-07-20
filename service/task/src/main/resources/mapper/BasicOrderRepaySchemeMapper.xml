@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.task.mapper.BasicOrderRepaySchemeMapper">
+
+    <update id="updateOverdueCheck" parameterType="java.lang.String">
+        UPDATE basic_order_repay_scheme
+        SET repay_status = 10119
+        WHERE repayment_date <![CDATA[ < ]]> #{repaymentDate} AND repay_status NOT IN ( 10118, 10121, 10122 )
+    </update>
+
+    <delete id="deleteOverdue">
+        DELETE FROM basic_order_repay_scheme where repay_status = 10119 AND expense_code IN ("fj", "fx")
+    </delete>
+
+    <select id="selectOverdueExpense" parameterType="Map" resultType="com.fintecher.task.vo.BasicRepaySchemeExpenseModel">
+    SELECT
+	brse.id AS id,
+	brse.scheme_id AS schemeId,
+	brse.expense_id AS expenseId,
+	expense.expense_name AS expenseName,
+	expense.expense_code AS expenseCode,
+	brse.repay_proportion AS repayProportion
+FROM
+	basic_repay_scheme_expense brse
+	LEFT JOIN basic_expense expense ON expense.id = brse.expense_id
+WHERE
+	brse.scheme_id =#{schemeId}
+	AND expense.expense_code =#{expenseCode}
+    </select>
+
+    <select id="selectOverdueInfo" parameterType="Map" resultType="com.fintecher.task.vo.BasicOrderRepaySchemeModel">
+        SELECT
+        boes.order_id AS orderId,
+        boes.periods AS periods,
+        bco.scheme_id AS schemeId,
+        sum( IFNULL( boes.repay_money, 0 ) ) - sum( IFNULL( boes.is_repay_money, 0 ) ) AS repayMoney,
+        repayment_date AS repaymentDate
+        FROM
+        basic_order_repay_scheme boes
+        LEFT JOIN basic_customer_order bco ON bco.id = boes.order_id
+        WHERE
+        repayment_date != NULL
+        AND boes.periods>0
+        AND boes.repay_money>0
+        AND boes.repay_status IN ( 10117, 10119, 10120 )
+        AND repayment_date <![CDATA[ < ]]> #{repaymentDate}
+        GROUP BY
+        boes.periods,
+        boes.order_id,
+        boes.repayment_date,
+        bco.scheme_id
+    </select>
+
+    <select id="selectPrincipal" parameterType="Map" resultType="java.math.BigDecimal">
+        select repay_money as money from basic_order_repay_scheme where
+         expense_code="bj"
+         AND order_id=#{orderId}
+         AND periods=#{periods}
+    </select>
+
+</mapper>

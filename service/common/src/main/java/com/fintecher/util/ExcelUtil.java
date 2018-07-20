@@ -567,12 +567,15 @@ public class ExcelUtil {
         }
         String cellValue = getCellValue(cell);
         if ("java.util.Date".equalsIgnoreCase(clazz.getName())) {
-            if (cellValue.matches("\\d{4}/\\d{1,2}/\\d{1,2}"))
+            if (cellValue.matches("\\d{4}/\\d{1,2}/\\d{1,2}")) {
                 return ZWDateUtil.getUtilDate(cellValue, "yyyy/MM/dd");
-            else if (cellValue.matches("\\d{4}-\\d{1,2}-\\d{1,2}"))
+            }
+            else if (cellValue.matches("\\d{4}-\\d{1,2}-\\d{1,2}")) {
                 return ZWDateUtil.getUtilDate(cellValue, BaseObject.DATE_FORMAT);
-            else
+            }
+            else {
                 throw new RuntimeException("日期格式不合适");
+            }
         } else if ("java.lang.Integer".equalsIgnoreCase(clazz.getName())) {
             return Integer.parseInt(cellValue);
         } else if ("java.lang.Short".equalsIgnoreCase(clazz.getName())) {
@@ -806,9 +809,10 @@ public class ExcelUtil {
             throw new Exception("数据总条数[".concat(String.valueOf(dataList.size())).concat("] 超过单sheet页允许的最大数据量[".concat(sheetDataCount)).concat("]"));
         }
         FileOutputStream fOut = null;
+        SXSSFWorkbook wb = null;
         try {
             // 在内存中保持1000行，超过1000行将被刷新到磁盘
-            SXSSFWorkbook wb = new SXSSFWorkbook(1000);
+            wb = new SXSSFWorkbook(1000);
             int titleCol = dataStartCol;//数据开始列
             Sheet sheet = wb.createSheet();
             if (titleFlag) {
@@ -834,15 +838,21 @@ public class ExcelUtil {
                 //开始列重置
                 titleCol = dataStartCol;
             }
-            fOut = new FileOutputStream(file);
+            if(file!=null)
+                fOut = new FileOutputStream(file);
             wb.write(fOut);
 
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             throw new Exception("写入Excel文件失败");
         } finally {
-            fOut.flush();       //刷新缓冲区
-            fOut.close();
+            if (fOut != null) {
+                fOut.flush();       //刷新缓冲区
+                fOut.close();
+            }
+            if (wb != null) {
+                wb.close();
+            }
         }
     }
 }

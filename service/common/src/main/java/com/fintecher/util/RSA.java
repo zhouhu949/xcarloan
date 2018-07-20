@@ -14,9 +14,9 @@ import java.security.spec.X509EncodedKeySpec;
 
 public class RSA {
 
-    public static String ALGORITHM = "RSA";
+    public static final String ALGORITHM = "RSA";
 
-    public static String CHAR_SET = "UTF-8";
+    public static final String CHAR_SET = "UTF-8";
 
     public static final String SIGN_ALGORITHMS = "SHA1WithRSA";
 

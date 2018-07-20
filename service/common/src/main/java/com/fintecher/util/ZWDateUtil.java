@@ -1,11 +1,13 @@
 package com.fintecher.util;
 
+import org.apache.commons.lang3.StringUtils;
+import sun.util.calendar.LocalGregorianCalendar;
+
+import java.net.UnknownHostException;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Date;
@@ -104,6 +106,15 @@ public class ZWDateUtil {
     }
 
     /**
+     * 获取当前年月日
+     *
+     * @return
+     */
+    public static String getYMDDate() {
+        return fomratterDate(new Date(), "yyyyMMdd");
+    }
+
+    /**
      * 转换日期 20080101 -> Date
      *
      * @param dateStr 日期字符串
@@ -174,7 +185,7 @@ public class ZWDateUtil {
     }
 
     /**
-     * 获取两个日期相差的天数、月数(可以时负数或正数)
+     * 获取两个日期相差的天数、月数(可以是负数或正数)
      *
      * @param startDate
      * @param endDate
@@ -188,5 +199,54 @@ public class ZWDateUtil {
         return Integer.parseInt(difValue);
     }
 
+    /**
+     * 获取传入时间下个月的某一天时间
+     *
+     * @param startDate
+     * @param day
+     * @return
+     */
+    public static Date getNextMonth(Date startDate, Integer day) {
+        try {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(startDate);
+            int month = calendar.get(Calendar.MONTH);
+            if (month+1>= 13) {
+                calendar.add(Calendar.YEAR,+1);
+                calendar.set(Calendar.MONTH,0);
+            }else {
+                calendar.add(Calendar.MONTH, +1);
+            }
+            int day2 = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+            int day1 = day >= day2 ? day2 : day;
+            calendar.set(Calendar.DAY_OF_MONTH ,day1);
+            return  calendar.getTime();
 
+        } catch (Exception e) {
+            e.printStackTrace();
+            return  null;
+        }
+    }
+
+    /**
+     * 获取传入时间N个月的某一天时间
+     *
+     * @param startDate
+     * @param day
+     * @return
+     */
+    public static Date getNextMonthDay(Date startDate, Integer day,Integer periods) {
+        try {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(startDate);
+            calendar.add(Calendar.MONTH,+periods);
+            int day2 = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+            int day1 = day >= day2 ? day2 : day;
+            calendar.set(Calendar.DAY_OF_MONTH ,day1);
+            return  calendar.getTime();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return  null;
+        }
+    }
 }

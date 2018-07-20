@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fintecher.manage.mapper.BasicCustomerJobMapper">
+
+    <select id="findPersonalJobList" parameterType="java.lang.Long"  resultType="com.fintecher.entity.BasicCustomerJob">
+        SELECT
+             id,
+             customer_id,
+             job_type,
+             company_name,
+             company_nature,
+             rank,
+             company_address,
+             company_address_detail,
+             company_phone,
+             department,
+             duty,
+             access_company_time,
+             basic_salary,
+             pay_day,
+             pay_way,
+             yearly_salaries,
+             month_other_income,
+             other_income_source,
+             identity,
+             stock_scale,
+             enterprise_manage_years,
+             enterprise_manage_belong,
+             employees_number,
+             registered_capital,
+             industry,
+             pastyear_income,
+             pastyear_profit,
+             operator,
+             operate_time,
+             province,
+             city,
+             other_industry
+        FROM basic_customer_job
+        WHERE customer_id=#{customId}
+    </select>
+</mapper>

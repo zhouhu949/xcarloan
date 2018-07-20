@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.fintecher.manage.mapper.BasicStockCarMapper">
+
+    <select id="findAllStockCarList" resultType="com.fintecher.manage.vo.BasicStockCarListParams">
+
+
+        SELECT
+        sc.id AS id,
+        bs.supplier_name AS supplierName,
+        sc.model_id AS modelId,
+        sc.org_id AS orgId,
+        sc.supplier_id AS supplierId,
+        sc.has_supplier_loan AS hasSupplierLoan,
+        sc.operator AS operator,
+        sc.operator_time AS operatorTime,
+        sc.order_id AS orderId,
+        sc.stock_car_no AS stockCarNo,
+        sc.remark AS remark,
+        sc.stock_car_color AS stockCarColor,
+        sc.stock_engine_no AS stockEngineNo,
+        sc.stock_in_date AS stockInDate,
+        sc.stock_status AS stockStatus,
+        sc.stock_price AS stockPrice,
+        sc.stock_out_date AS stockOutDate
+        FROM basic_supplier bs
+        INNER JOIN
+        basic_stock_car sc ON bs.id = sc.supplier_id
+        where sc.org_id = #{orgId} and sc.model_id = #{basicStockCarSearch.modelId}
+        <if test="basicStockCarSearch.supplierId != null and  basicStockCarSearch.supplierId !=''">
+            and sc.supplier_id = #{basicStockCarSearch.supplierId}
+        </if>
+
+
+    </select>
+
+    <select id="selectBySupplier" parameterType="com.fintecher.entity.BasicStockCar" resultType="com.fintecher.entity.BasicStockCar">
+    select
+    id,
+    stock_car_no as stockCarNo,
+    stock_engine_no as stockEngineNo,
+    stock_car_color  as stockCarColor,
+    stock_status as stockStatus,
+    has_supplier_loan as hasSupplierLoan,
+    stock_price as stockPrice
+	from basic_stock_car where stock_status!=#{stockStatus}
+        AND has_supplier_loan =#{hasSupplierLoan}
+	<if test="supplierId != null and supplierId != ''">
+      AND  supplier_id=#{supplierId}
+    </if>
+    </select>
+
+</mapper>

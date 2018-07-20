@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.DataDictTypeMapper">
+    <resultMap id="DataDictTypeResultMap" type="com.fintecher.entity.SysDictItem">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="dict_item_code" property="dictItemCode" jdbcType="VARCHAR"/>
+        <result column="dict_item_name" property="dictItemName" jdbcType="VARCHAR"/>
+        <result column="dict_item_status" property="dictItemStatus" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!-- 获取数据字典项类型最大ID -->
+    <select id="getMaxId" resultType="Integer">
+        SELECT max(dict_code) FROM sys_dict
+    </select>
+
+    <!--查询系统字典类型-->
+    <select id="selectListAll" resultType="com.fintecher.entity.SysDict">
+        SELECT id,dict_name AS dictName,dict_code as dictCode,dict_sort AS dictSort,remark,dict_type as dictType FROM sys_dict  where dict_type = 10000
+    </select>
+    <!--查询自定义字典类型-->
+    <select id="findAll" resultType="com.fintecher.entity.SysDict">
+        SELECT id,dict_name AS dictName,dict_code as dictCode,dict_sort AS dictSort,remark,dict_type as dictType  FROM sys_dict where dict_type = 10001
+    </select>
+</mapper>
+
+

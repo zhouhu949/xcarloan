@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.FinanceStorageMapper">
+
+    <select id="getFinanceStorageList" resultType="com.fintecher.manage.vo.FinanceStorageListParams">
+
+        SELECT
+        bc.customer_name AS customerName,
+        bcc.car_no AS carNo,
+        bco.order_no AS orderNo,
+        fs.id AS id,
+        bca.assessment_status AS assessmentStatus,
+        fs.stock_in_date AS stockInDate,
+        fs.stock_out_date AS stockOutDate,
+        fs.mortgage_status AS mortgageStatus,
+        bco.order_mortgage_type AS orderMrtgageType,
+        bco.id AS orderId
+        FROM finance_storage fs
+        LEFT JOIN basic_customer_order bco ON bco.id = fs.order_id
+        LEFT JOIN basic_customer_car bcc ON fs.car_id = bcc.id
+        LEFT JOIN basic_customer bc ON bco.customer_id = bc.id
+        LEFT JOIN basic_customer_car_assessment bca ON bca.id = fs.assessment_id
+        WHERE 1 = 1
+        <if test="allDataAuth != null">
+            <foreach collection="allDataAuth" item="item" open="AND (" close=")" separator="OR">
+                AND org.org_tree_code LIKE CONCAT(#{item}, '%')
+            </foreach>
+        </if>
+        <if test="allExceptDataAuth != null">
+            <foreach collection="allExceptDataAuth" item="item" open="AND (" close=")" separator="AND">
+                AND org.org_tree_code NOT LIKE CONCAT(#{item}, '%')
+            </foreach>
+        </if>
+
+        <if test="customerName !=null">
+            AND bc.customer_name LIKE CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="orderNo !=null">
+            AND bco.order_no LIKE CONCAT('%',#{orderNo},'%')
+        </if>
+        <if test="mortgageStatus !=null">
+            AND fs.mortgage_status = #{mortgageStatus}
+        </if>
+
+
+    </select>
+
+
+    <select id="queryMortgageType" resultType="com.fintecher.manage.vo.QueryMortgageTypeParams">
+
+
+        SELECT
+        fs.car_id AS carId,
+        fs.order_id AS orderId,
+        fs.id AS mortgageRecordId,
+        fs.org_id AS orgId,
+        fs.mortgage_status AS mortgageStatus,
+        bco.order_mortgage_type AS orderMortgageType,
+        fs.operator AS operator,
+        fs.operator_time AS operatorTime,
+        fs.stock_in_date AS stockInDate
+        FROM finance_storage fs
+        LEFT JOIN basic_customer_order bco ON bco.id = fs.order_id
+        WHERE fs.id = #{id}
+
+    </select>
+
+    <select id="selectFinanceStorage" resultType="com.fintecher.manage.vo.UpdateFinanceOutStorageParams">
+
+        SELECT
+        m.id AS id,
+        f.stock_out_date AS stockOutDate,
+        f.mortgage_status AS mortgageStatus,
+        f.operator AS operator,
+        f.operator_time AS operatorTime
+        FROM finance_storage f
+        LEFT JOIN finance_storage_pledge m
+        ON f.id = m.mortgage_record_id WHERE f.id = #{id}
+
+
+    </select>
+
+
+    <select id="selectFinanceMortStorage" resultType="com.fintecher.manage.vo.UpdateFinanceOutStorageParams">
+
+        SELECT
+        m.id AS id,
+        f.stock_out_date AS stockOutDate,
+        f.mortgage_status AS mortgageStatus,
+        f.operator AS operator,
+        f.operator_time AS operatorTime
+        FROM finance_storage f
+        LEFT JOIN finance_storage_mortgage m
+        ON f.id = m.mortgage_record_id WHERE f.id = #{id}
+
+
+    </select>
+
+    <select id="getDetainDetails" resultType="com.fintecher.manage.vo.GetDetainDetails">
+
+  SELECT
+        bc.customer_name AS customerName,
+        bcc.car_no AS carNo,
+        bcc.is_second_hand AS isSecondHand,
+        bcc.register_time AS registerTime ,
+        bcc.buy_type AS buyType,
+        bc.customer_name AS customerName,
+        bc.customer_phone AS customerPhone,
+        bco.order_mortgage_type AS orderMortgageType
+  FROM finance_storage fs
+  LEFT JOIN basic_customer_order bco ON bco.id = fs.order_id
+  LEFT JOIN basic_customer_car bcc ON fs.car_id = bcc.id
+  LEFT JOIN basic_customer bc ON bcc.customer_id = bc.id
+  WHERE     fs.id =#{id}
+
+</select>
+
+    <select id="getDetainPoleRecord" resultType="com.fintecher.manage.vo.GetDetainPoleRecord">
+        SELECT
+        fsp.pledge_place AS pledgePlace,
+        fsp.pledge_position AS pledgePosition,
+        fsp.pledge_no AS pledgeNo,
+        fs.operator_time AS operatorTime,
+        su.user_realname AS operator,
+        fsp.stock_in_date AS stockInDate,
+        fsp.stock_out_date AS stockOutDate
+        FROM finance_storage fs
+        LEFT JOIN finance_storage_pledge fsp ON fs.id = fsp.mortgage_record_id
+        LEFT JOIN sys_user su on fs.operator = su.id
+        WHERE fs.id = #{id}
+
+
+    </select>
+
+
+    <select id="getDetainMortRecord" resultType="com.fintecher.manage.vo.GetDetainMortRecord">
+        SELECT
+        fsm.mortgage_no AS mortgageNo,
+        fsm.gps_status AS gpsStatus,
+        fsm.gps_manufactor AS gpsManufactor,
+        fs.operator_time AS operatorTime,
+        su.user_realname AS operator,
+        fsm.gps_no AS gpsNo,
+        fs.stock_in_date AS stockInDate,
+        fs.stock_out_date AS stockOutDate
+        FROM finance_storage fs
+        LEFT JOIN finance_storage_mortgage fsm ON fs.id = fsm.mortgage_record_id
+        left JOIN sys_user su on fsm.operator = su.id
+        WHERE fs.id = #{id}
+
+
+    </select>
+
+
+    <select id="selectAssessmentStatus" resultType="com.fintecher.entity.FinanceStorage">
+
+        SELECT
+        fs.id AS id,
+        fs.assessment_id AS assessmentId
+        FROM finance_storage fs
+        LEFT JOIN basic_customer_car_assessment bca ON bca.id = fs.assessment_id
+        WHERE fs.id =#{id}
+
+
+    </select>
+
+    <select id="selectStatusOnIN" parameterType="java.lang.Long" resultType="com.fintecher.entity.FinanceStorage">
+        SELECT
+            id
+        FROM
+            finance_storage
+        WHERE
+            order_id = #{orderId}
+            AND mortgage_status != 10140
+    </select>
+</mapper>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.BasicOffsetItemMapper">
+    <insert id="insertBasicOffsetItem" parameterType="com.fintecher.entity.BasicOffsetItem">
+            insert into basic_offset_item (
+            item_order,offset_id,expense_id
+            ) VALUES(
+            (select count(a.offset_id) +1 as item_order from basic_offset_item a where a.offset_id=#{offsetId}),#{offsetId},#{expenseId}
+            )
+    </insert>
+    <select id="selectByItemOrderDesc" resultType="com.fintecher.entity.BasicOffsetItem">
+        select id,item_order,offset_id,expense_id from basic_offset_item ORDER BY item_order desc
+    </select>
+    <update id="updateBasicOffsetItem" parameterType="com.fintecher.entity.BasicOffsetItem">
+        update basic_offset_item
+        <set>
+            <if test="item_order!=null">item_order=#{itemOrder}</if>
+        </set>
+
+    </update>
+
+    <delete id="deleteBasicOffsetItem" parameterType="com.fintecher.entity.BasicOffsetItem">
+        delete basic_offset_item where offset_id=#{offsetId} and expense_id=#{expenseId}
+    </delete>
+
+    <select id="deleteCheck" parameterType="java.lang.Long" resultType="int">
+        select is_system from basic_expense where id=#{expenseId}
+    </select>
+
+    <select id="selectByOffsetId" parameterType="java.lang.Long"
+            resultType="com.fintecher.manage.vo.BasicOffsetItemModel">
+      SELECT
+	  b.id AS id,
+	  a.expense_name AS expenseName,
+	  a.remark AS remark
+      FROM
+	  basic_expense a
+      LEFT JOIN basic_offset_item b ON a.id = b.expense_id
+      WHERE
+	b.offset_id = #{offsetId} order by b.item_order asc
+    </select>
+
+    <select id="selectById" parameterType="java.lang.Long" resultType="com.fintecher.manage.vo.BasicOffsetItemModel">
+      select a.id as id,a.expense_name as expenseName,a.remark as remark from basic_expense a LEFT JOIN basic_offset_item b
+        on a.id=b.expense_id where b.id=#{id} order by b.item_order asc
+    </select>
+
+    <update id="updateItemOrder" parameterType="com.fintecher.entity.BasicOffsetItem">
+        update basic_offset_item set item_order= item_order-1 where offset_id=#{offsetId} and item_order>#{itemOrder}
+    </update>
+</mapper>

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fintecher.manage.mapper.BasicProductMapper">
+    <select id="deleteCheck" parameterType="java.lang.Long" resultType="java.lang.Integer">
+        select count(product_id) from basic_product_repay_template where product_id=#{id}
+    </select>
+    <select id="selectBasicProduct"  resultType="com.fintecher.manage.vo.ProductParamsModel">
+        select a.id as id,
+        a.product_name as productName,
+        a.file_url as fileUrl,
+        a.config_id as configId,
+        a.scheme_id as schemeId,
+        a.org_id as orgId,
+        b.config_name configName,
+        c.scheme_name as schemeName from basic_product a
+        join basic_car_model b on a.config_id=b.id join basic_repay_scheme c
+         on a.scheme_id=c.id
+    </select>
+
+    <select id="findRepaySchemeExpense" parameterType="java.lang.Long" resultType="com.fintecher.manage.vo.RepaySchemeExpenseModel">
+        SELECT
+        be.expense_code AS expenseCode,
+        be.expense_name AS expenseName,
+        expense.fixed_cost AS fixCost,
+        expense.is_first AS isFirst,
+        expense.is_last AS isLast,
+        expense.is_refund AS isRefund,
+        expense.repay_proportion AS repayProportion,
+        expense.repay_type AS repayType
+        FROM basic_repay_scheme_expense expense
+        LEFT JOIN basic_expense be ON expense.expense_id = be.id
+        WHERE expense.scheme_id = #{schemeId}
+    </select>
+    <select id="selectByCarId" parameterType="java.lang.Long" resultType="com.fintecher.entity.BasicProduct">
+        select id ,
+        scheme_id as schemeId,
+        config_id as configId,
+        org_id as orgId,
+        product_name as productName,
+        file_url as fileUrl from basic_product where config_id=#{carId}
+    </select>
+
+    <select id="selectBasicProductList" parameterType="java.lang.Long"  resultType="com.fintecher.manage.vo.BasicProductModel">
+        select a.id as id,
+        a.product_name as productName,
+        a.file_url as fileUrl,
+        a.config_id as configId,
+        a.scheme_id as schemeId,
+        a.org_id as orgId,
+        a.product_type as productType,
+        a.product_status as productStatus,
+        b.model_name as carModelName,
+        c.periods as periods,
+        c.interest_rate as interestRate,
+        c.scheme_name as schemeName from basic_product a
+        join basic_car_model b on a.config_id=b.id join basic_repay_scheme c
+         on a.scheme_id=c.id where b.id=#{carId}
+    </select>
+
+    <select id="queryReleaseProductByCar" resultType="com.fintecher.manage.vo.ProductSchemeModel">
+        SELECT
+        prod.id AS productId,
+        prod.product_name AS productName,
+        prod.file_url AS fileUrl,
+        prod.config_id AS configId,
+        prod.scheme_id AS schemeId,
+        prod.product_type AS productType,
+        prod.product_status AS productStatus,
+        model.model_name AS carName,
+        scheme.periods AS periods,
+        scheme.interest_rate AS interestRate,
+        scheme.scheme_name AS schemeName,
+        scheme.repay_type AS repayType,
+        scheme.account_day AS accountDay
+        FROM basic_product prod
+        LEFT JOIN basic_car_model model ON prod.config_id = model.id
+        LEFT JOIN basic_repay_scheme scheme ON prod.scheme_id = scheme.id
+        WHERE prod.config_id = #{carId} AND prod.product_status = 10057
+        <if test="schemeName != null and schemeName != ''">
+            AND scheme.scheme_name LIKE CONCAT('%', #{schemeName}, '%')
+        </if>
+    </select>
+</mapper>

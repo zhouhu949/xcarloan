@@ -12,7 +12,7 @@ spring:
     data:
         mongodb:
             uri: mongodb://192.168.3.2:27017
-            database: carloan_test
+            database: xcarloan_test
 #    rabbitmq:
 #        username: dev
 #        password: dev
@@ -38,5 +38,5 @@ security:
     password: ${REGISTRY_SERVER_PASSWORD:password}
 
 gridfs:
-  path: 192.168.3.3:8763/service-file
-  localPath: 127.0.0.7:8763/service-file
+  path: 192.168.3.223:8762/service-file
+  localPath: 127.0.0.7:8762/service-file

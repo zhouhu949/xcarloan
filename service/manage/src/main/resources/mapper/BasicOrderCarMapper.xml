@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.BasicOrderCarMapper">
+
+
+    <select id="selectBasicOrderCarByOrderId" resultType="com.fintecher.entity.BasicOrderCar">
+
+        SELECT
+        c.id AS id,
+        c.model_id AS modelId,
+        c.supplier_id AS supplierId,
+        c.order_id AS orderId,
+        c.stock_id AS stockId,
+        c.order_car_name AS orderCarName,
+        c.order_car_desc AS orderCarDesc,
+        c.order_car_color AS orderCarColor,
+        c.order_car_param_desc AS orderCarParamDesc,
+        c.is_supplier AS isSupplier,
+        c.has_supplier_loan AS hasSupplierLoan,
+        c.remark AS remark,
+        c.operator_time AS operatorTime,
+        c.operator AS operator
+        FROM basic_order_car c LEFT JOIN basic_customer_order o ON c.order_id = o.id
+        WHERE c.order_id =#{id}
+    </select>
+
+    <select id="findOrderCar" parameterType="Map" resultType="com.fintecher.entity.BasicOrderCar">
+        SELECT
+        c.id AS id,
+        c.model_id AS modelId,
+        c.supplier_id AS supplierId,
+        c.order_id AS orderId,
+        c.stock_id AS stockId,
+        c.order_car_name AS orderCarName,
+        c.order_car_desc AS orderCarDesc,
+        c.order_car_color AS orderCarColor,
+        c.order_car_param_desc AS orderCarParamDesc,
+        c.is_supplier AS isSupplier,
+        c.has_supplier_loan AS hasSupplierLoan,
+        c.remark AS remark,
+        c.operator_time AS operatorTime,
+        c.operator AS operator
+        FROM basic_order_car c
+        LEFT JOIN basic_customer_order bco
+        LEFT JOIN sys_org org ON bco.org_id = org.id
+        where 1=1
+        <foreach collection="dataAuth" item="item" open="AND (" close=")" separator="OR">
+            org.org_tree_code LIKE CONCAT(#{item}, '%')
+        </foreach>
+        <foreach collection="exceptDataAuth" item="item" open="AND (" close=")" separator="AND">
+            org.org_tree_code NOT LIKE CONCAT(#{item}, '%')
+        </foreach>
+        <if test="supplierId != null AND supplierId != ''">
+            c.supplier_id = #{supplierId}
+        </if>
+    </select>
+</mapper>

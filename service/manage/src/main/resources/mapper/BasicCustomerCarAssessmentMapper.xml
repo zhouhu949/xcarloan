@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.BasicCustomerCarAssessmentMapper">
+
+    <select id="findCustomerAssessmentList" resultType="com.fintecher.manage.vo.CustomerAssessmentListModel">
+        SELECT
+        c.account_status as accountStatus,
+        c.customer_name as customerName,
+        c.customer_sex as customerSex,
+        c.customer_code as customerCode,
+        a.car_no as carNo,
+        a.car_price as carPrice ,
+        a.car_type as carType,
+        a.id as carId,
+        a.is_second_hand as isSecondHand,
+        a.register_time as registerTime,
+        a.customer_id as customerId,
+        d.assessment_apply_date as assessmentApplyDate,
+        d.assessment_date as assessmentDate,
+        d.assessment_no as assessmentNo,
+        d.assessment_result as assessmentResult,
+        d.assessment_status as assessmentStatus
+        FROM  basic_customer_car a
+        LEFT JOIN  (SELECT car_id,assessment_apply_date,assessment_date,assessment_no,assessment_result,assessment_status
+        FROM basic_customer_car_assessment ORDER BY assessment_date desc) d  on a.id = d.car_id
+        LEFT JOIN basic_customer c on  c.id = a.customer_id
+        WHERE 1=1
+        <if test="customerName != null">
+            AND c.customer_name LIKE CONCAT('%',#{customerName},'%')
+        </if>
+        <if test="carNo != null ">
+            AND a.car_no LIKE CONCAT('%',#{carNo},'%')
+        </if>
+        <if test="assessmentStatus !=null">
+            AND d.assessment_status LIKE CONCAT('%',#{assessmentStatus},'%')
+        </if>
+        ORDER BY d.assessment_date DESC
+    </select>
+    <select id="findAssessmentConfigList" resultType="java.util.HashMap">
+        select attr_type as attrType,attr_name as attrName,attr_value as attrValue from basic_car_attribute
+    </select>
+
+    <!--获取评估报告列表-->
+    <select id="findAssessmentReportList" resultType="com.fintecher.manage.vo.CustomerAssessmentReportModel">
+        SELECT
+        a.account_status as accountStatus,
+        a.customer_name as customerName,
+        a.customer_sex as customerSex,
+        a.customer_code as customerCode,
+        b.car_no as carNo,
+        b.car_price as carPrice,
+        b.car_type as carType,
+        c.assessment_apply_date as assessmentApplyDate,
+        c.assessment_date as assessmentDate,
+        c.assessment_no as assessmentNo,
+        c.assessment_result as assessmentResult,
+        c.id as carAssessmentId,
+        c.assessment_status as assessmentStatus
+        from basic_customer a   LEFT JOIN basic_customer_car b on  a.id = b.customer_id
+        LEFT JOIN basic_customer_car_assessment c ON b.id = c.car_id
+        WHERE b.id = #{carId} ORDER BY c.assessment_date DESC
+    </select>
+
+    <!--获取评估详情-->
+    <select id="findAssessmentReportInfo" resultType="com.fintecher.manage.vo.CustomerAssessmentInfoModel">
+    SELECT
+        a.account_status as accountStatus,
+        a.customer_name as customerName,
+        a.customer_sex as customerSex,
+        a.customer_code as customerCode,
+        b.car_no as carNo,
+        b.car_price as carPrice,
+        b.car_type as carType,
+        b.is_second_hand as isSecondHand,
+        b.register_time as registerTime,
+        b.mortgage_num as mortgageNum,
+        b.buy_type as buyType,
+        b.is_loan_finished as isLoanFinished,
+        b.car_status as carStatus,
+        c.factory_time as factoryTime,
+        c.mile_age as mileAge,
+        c.driving_no as drivingNo,
+        c.transfer_no as transferNo,
+        c.car_purpose as carPurpose,
+        c.transmission as transmission,
+        c.driver as driver,
+        c.displacement as displacement,
+        c.car_situation as carSituation,
+        c.evaluation as evaluation,
+        c.remark as remark
+        from basic_customer a LEFT JOIN basic_customer_car b on  a.id = b.customer_id
+        LEFT JOIN basic_car_config c ON  c.car_id = b.id
+        LEFT JOIN basic_customer_car_assessment d ON d.car_id = b.id
+        WHERE d.id = #{assessmentId}
+    </select>
+    <!--查询押品基础信息-->
+    <select id="findCustomerCarInfo" resultType="com.fintecher.manage.vo.CustomerCarInfoModel">
+        SELECT
+          a.car_no as carNo,
+          a.buy_type as buyType,
+          a.car_type as carType,
+          b.customer_name as customerName,
+          b.customer_phone as customerPhone,
+          b.id_card as idCard
+         FROM basic_customer_car a LEFT JOIN basic_customer b
+        ON b.id = a.customer_id
+        WHERE a.id = #{carId}
+    </select>
+
+    <!--查询所有的评估车辆属性-->
+    <select id="findAllCarAttrValue" resultType="com.fintecher.manage.vo.CarAttributeModel">
+      SELECT
+        a.attr_type as attrType,
+        a.attr_name as attrName,
+        a.attr_value as attrValue,
+        b.basic_id as basicId,
+        b.attr_name as attrCode
+        from basic_car_attribute a LEFT JOIN basic_car_attrvalue b
+        ON a.attr_value = b.attr_value
+        WHERE b.basic_id = #{assessmentId}
+
+    </select>
+
+    <!--判断订单状态和车辆-->
+    <select id="findOrderByFinanceStorage" resultType="com.fintecher.manage.vo.FindCarByFinanceStorageModel">
+        SELECT
+        a.id as orderId,
+        a.order_status as orderStatus
+        FROM basic_customer_order a
+        LEFT JOIN basic_customer_car b
+        ON b.order_id = a.id
+        WHERE b.id = #{carId}
+    </select>
+
+    <select id="findCarByFianceStorage" resultType="com.fintecher.entity.FinanceStorage">
+        SELECT id,order_id as orderId,car_id as carId,assessment_id as assessmentId FROM finance_storage  WHERE car_id = #{carId}
+    </select>
+
+
+</mapper>

@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.BasicCustomerOrderMapper">
+
+    <select id="query" parameterType="map" resultType="com.fintecher.manage.vo.OrderInfoModel">
+        SELECT
+        bc.id AS customerId,
+        bc.customer_name AS customerName,
+        bc.id_card AS idCard,
+        bc.customer_phone AS customerPhone,
+        bco.id AS orderId,
+        bco.order_no AS orderNo,
+        bco.order_type AS orderType,
+        bco.order_status AS orderStatus,
+        bco.order_repay_type AS orderRepayType,
+        bco.order_periods AS orderPeriods,
+        bco.order_price AS orderPrice,
+        brs.id AS schemeId,
+        brs.scheme_name AS schemeName
+        FROM basic_customer_order bco
+        LEFT JOIN basic_repay_scheme brs ON bco.scheme_id = brs.id
+        LEFT JOIN basic_customer bc ON bco.customer_id = bc.id
+        LEFT JOIN sys_org so ON bco.org_id = so.id
+        <where>
+            <if test="dataAuth != null">
+                <foreach collection="dataAuth" item="item" open="AND (" close=")" separator="OR">
+                    so.org_tree_code LIKE CONCAT(#{item}, '%')
+                </foreach>
+            </if>
+            <if test="exceptDataAuth != null">
+                <foreach collection="exceptDataAuth" item="item" open="AND (" close=")" separator="AND">
+                    so.org_tree_code NOT LIKE CONCAT(#{item}, '%')
+                </foreach>
+            </if>
+            <if test="customerName != null and customerName != ''">
+                AND bc.customer_name LIKE CONCAT('%',#{customerName} ,'%')
+            </if>
+            <if test="orderNo != null and orderNo != ''">
+                AND bco.order_no LIKE CONCAT('%',#{orderNo} ,'%')
+            </if>
+            <if test="idCard != null and idCard != ''">
+                AND bc.id_card LIKE CONCAT('%',#{idCard} ,'%')
+            </if>
+            <if test="customerPhone != null and customerPhone != ''">
+                AND bc.customer_phone LIKE CONCAT('%',#{customerPhone} ,'%')
+            </if>
+        </where>
+        ORDER BY bco.id DESC
+    </select>
+
+    <select id="findCustomerOrderFile" resultType="com.fintecher.manage.vo.OrderInfoModel">
+        SELECT
+        bc.id AS customerId,
+        bc.customer_name AS customerName,
+        bc.id_card AS idCard,
+        bc.customer_phone AS customerPhone,
+        bco.id AS orderId,
+        bco.order_no AS orderNo,
+        bco.order_type AS orderType,
+        bco.order_status AS orderStatus,
+        bco.order_repay_type AS orderRepayType,
+        bco.order_periods AS orderPeriods,
+        bco.order_price AS orderPrice,
+        brs.id AS schemeId,
+        brs.scheme_name AS schemeName
+        FROM basic_customer_order bco
+        LEFT JOIN basic_repay_scheme brs ON bco.scheme_id = brs.id
+        LEFT JOIN basic_customer bc ON bco.customer_id = bc.id
+        LEFT JOIN sys_org so ON bco.org_id = so.id
+        WHERE so.org_tree_code LIKE CONCAT((SELECT org_tree_code FROM sys_org WHERE id = #{orgId}),'%')
+        AND bco.order_status = 10107 and bco.order_type=10050
+        <if test="customerName != null and customerName != ''">
+            AND bc.customer_name LIKE CONCAT('%',#{customerName} ,'%')
+        </if>
+        <if test="orderNo != null and orderNo != ''">
+            AND bco.order_no LIKE CONCAT('%',#{orderNo} ,'%')
+        </if>
+        <if test="idCard != null and idCard != ''">
+            AND bc.id_card LIKE CONCAT('%',#{idCard} ,'%')
+        </if>
+        <if test="customerPhone != null and customerPhone != ''">
+            AND bc.customer_phone LIKE CONCAT('%',#{customerPhone} ,'%')
+        </if>
+        ORDER BY bco.id DESC
+    </select>
+    <!--订单押品查询-->
+    <select id="findCustomerCollateral" resultType="com.fintecher.manage.vo.CustomerOrderMortgageModel">
+      SELECT
+              a.id as orderId,
+              a.org_id as orgId,
+              a.order_no as orderNo,
+              a.order_mortgage_type as orderMortgageType,
+              b.car_no as carNo,
+              b.car_price as carPrice,
+              b.car_type as carType,
+              b.mortgage_num as mortgageNum,
+              b.car_status as carStatus,
+                b.buy_type as buyType,
+                b.is_loan_finished as isLoanFinished,
+                b.is_second_hand as isSecondHand,
+                b.operator as operator,
+                b.operator_time as operatorTime,
+                b.register_time as registerTime
+      from basic_customer_order a LEFT JOIN basic_customer_car b on a.id = b.order_id
+      WHERE a.id = #{orderId}
+    </select>
+
+    <!--根据车产id获取评估记录列表-->
+    <select id="findAssessmentByCustomerCar" resultType="com.fintecher.manage.vo.BasicCustomerCollateralModel">
+           SELECT
+              a.id as carId,
+              a.car_no as carNo,
+              a.car_status as carStatus,
+                b.assessment_status as assessmentStatus,
+                b.assessment_apply_date as assessmentApplyDate,
+                b.assessment_date as assessmentDate,
+                b.assessment_no as assessmentNo,
+                b.assessment_result assessmentResult,
+                b.remark,
+                b.operator,
+                b.operator_time as operatorTime
+                from basic_customer_car a LEFT JOIN
+                basic_customer_car_assessment b on a.id = b.car_id
+              WHERE a.id = #{carId}
+    </select>
+
+    <!--根据车产id获取抵押记录列表-->
+    <select id="findMortgageByCustomerCar" resultType="com.fintecher.manage.vo.BasicFinanceMortgageModel">
+        SELECT
+                      a.id as carId,
+                      a.car_no as carNo,
+                      a.car_status as carStatus,
+								b.gps_manufactor as gpsManufactor,
+								b.gps_no as gpsNo,
+								b.gps_status as gpsStatus,
+								b.mortgage_no as mortgageNo,
+								b.mortgage_record_id as mortgageRecordId,
+								b.mortgage_status as mortgageStatus,
+								b.stock_in_date as stockInDate,
+								b.stock_out_date as stockOutDate,
+								b.operator,
+								b.operator_time as operatorTime
+                from basic_customer_car a LEFT JOIN
+                finance_storage_mortgage b on a.id = b.car_id
+              WHERE a.id = #{carId}
+    </select>
+
+    <!--根据车产id获取质押记录列表-->
+    <select id="findPledgeByCustomerCar" resultType="com.fintecher.manage.vo.BasicFinancePledgeModel">
+      SELECT
+                      a.id as carId,
+                      a.car_no as carNo,
+                      a.car_status as carStatus,
+								b.mortgage_status as mortgageStatus,
+                                b.pledge_no as pledgeNo,
+                                b.pledge_place as pledgePlace,
+                                b.pledge_position pledgePosition,
+                                b.stock_in_date as stockInDate,
+                                b.stock_out_date as stockOutDate,
+						        b.operator,
+					            b.operator_time as operatorTime
+                                from basic_customer_car a LEFT JOIN
+                                finance_storage_pledge b on a.id = b.car_id
+                                WHERE a.id = #{carId}
+    </select>
+
+    <!--还款计划-->
+    <select id="customerPaymentScheduleList" resultType="com.fintecher.manage.vo.CustomerPaymentScheduleModel">
+      SELECT a.periods as periods,
+    a.repay_money as repayMoney,
+    a.is_repay_money as isRepayMoney,
+    a.repay_status as repayStatus,
+    a.expense_name as expenseName,
+    a.expense_code as expenseCode,
+	a.order_id as orderId,
+    b.customer_id as customerId,
+    b.order_no as orderNo,
+    b.order_price as orderPrice,
+    b.order_type as orderType,
+    b.order_repay_type as orderRepayType,
+    b.order_interest_rate as orderInterestRate,
+    b.order_cycle_type as orderCycleType,
+    b.order_account_day as orderAccountDay,
+    c.customer_name as customerName
+    FROM basic_order_repay_scheme a LEFT JOIN basic_customer_order b
+    ON b.id = a.order_id
+    LEFT JOIN basic_customer c ON b.customer_id = c.id
+    WHERE b.id =  #{orderId}
+
+    </select>
+
+
+    <select id="queryOrderPayList" resultType="java.util.HashMap">
+        SELECT
+            scheme.periods,
+            sum(IFNULL(repay_money,0)) repayMoney,
+            sum(IFNULL(repay_money,0))-sum(IFNULL(is_repay_money,0)) needPay
+        FROM
+            basic_order_repay_scheme scheme
+        WHERE
+            scheme.order_id = #{orderId}
+        GROUP BY scheme.periods;
+    </select>
+
+    <select id="queryOrderPayFeeItemList" resultType="java.util.HashMap">
+    SELECT
+        expense_name expenseName,
+        expense_code expenseCode,
+        IFNULL( scheme.repay_money, 0 ) totalMoney,
+        IFNULL( scheme.is_repay_money, 0 ) hasPayMoney,
+        IFNULL( scheme.repay_money, 0 ) - IFNULL( scheme.is_repay_money, 0 ) needPayMoney
+    FROM
+	  basic_order_repay_scheme scheme
+    WHERE
+      scheme.order_id = #{orderId} AND periods=#{periods}
+
+    </select>
+</mapper>

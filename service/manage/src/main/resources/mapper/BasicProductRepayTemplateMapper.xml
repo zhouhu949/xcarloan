@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.BasicProductRepayTemplateMapper">
+
+<select id="selectRepaySchemeExpense" parameterType="java.lang.Long" resultType="com.fintecher.entity.BasicRepaySchemeExpense">
+      select id as id,
+  scheme_id as schemeId,
+  expense_id as expenseId,
+  is_first as isFirst,
+  repay_proportion as repayProportion,
+  fixed_cost as fixedCost,
+  repay_type as repayType,
+  is_last as isLast,
+  is_refund as isRefund,
+  remark as remark,
+  operator as operator,
+  operator_time as operatorTime from basic_repay_scheme_expense where scheme_id=#{schemeId}
+
+</select>
+
+  <select id="selectByProductId" parameterType="java.lang.Long" resultType="com.fintecher.entity.BasicProductRepayTemplate">
+  select id,
+  product_id,
+  repay_scheme_expense_id,
+  periods,
+  repay_money,
+  account_day,
+  remark,
+  operator,
+  operator_time from basic_product_repay_template where product_id=#{productId}
+  </select>
+
+  <select id="findBasicTemplateInfo" parameterType="java.lang.Long" resultType="com.fintecher.manage.vo.ProductTemplateInfo">
+    SELECT
+    t.id AS id,
+    t.product_id AS productId,
+    e.id AS schemeExpenseId,
+    ex.id AS expenseId,
+    ex.expense_code AS expenseCode,
+    ex.expense_name AS expenseName,
+    t.periods AS periods,
+    t.repay_money AS repayMoney,
+    t.account_day AS accountDay
+    FROM basic_product_repay_template t
+    LEFT JOIN basic_repay_scheme_expense e ON t.repay_scheme_expense_id = e.id
+    LEFT JOIN basic_expense ex ON e.expense_id = ex.id
+    WHERE t.product_id = #{productId}
+  </select>
+
+  <delete id="deleteByProductId" parameterType="java.lang.Long">
+    delete from basic_product_repay_template where product_id=#{productId}
+  </delete>
+  <select id="findByProductId" parameterType="java.lang.Long" resultType="Map">
+  select template.periods,GROUP_CONCAT(basic_expense.expense_name) as expense_name,GROUP_CONCAT(template.repay_money )as repay_money
+    from basic_product_repay_template template
+	inner join basic_repay_scheme scheme on template.repay_scheme_expense_id = scheme.id
+	inner join basic_repay_scheme_expense on basic_repay_scheme_expense.scheme_id=scheme.id
+	inner join basic_expense on
+	basic_repay_scheme_expense.expense_id=basic_expense.id where template.product_id=#{productId}
+	group by template.periods
+  </select>
+  
+  <select id="selectExpense" parameterType="java.lang.Long" resultType="Map">
+    SELECT DISTINCT
+        basic_expense.expense_name AS expenseName
+    FROM
+        basic_product_repay_template template
+        INNER JOIN basic_repay_scheme_expense ON template.repay_scheme_expense_id = basic_repay_scheme_expense.id
+        INNER JOIN basic_expense ON basic_repay_scheme_expense.expense_id = basic_expense.id
+    WHERE
+        template.product_id = #{productId}
+  </select>
+
+  <select id="selectTemplate" parameterType="Map" resultType="Map">
+    select template.periods
+    <foreach collection="keyList" item="item" index="index">
+    ,Max(case basic_expense.expense_name when #{item.expenseName} then template.repay_money else 0 end ) as #{item.expenseName}
+    </foreach>
+    from basic_product_repay_template template
+	inner join basic_repay_scheme scheme on template.repay_scheme_expense_id = scheme.id
+	inner join basic_repay_scheme_expense on basic_repay_scheme_expense.scheme_id=scheme.id
+	inner join basic_expense on
+	basic_repay_scheme_expense.expense_id=basic_expense.id where template.product_id=#{itemId}
+	group by template.periods
+  </select>
+
+</mapper>

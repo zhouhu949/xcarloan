@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fintecher.manage.mapper.FinanceLoanMapper">
+
+    <select id="selectSupplierLoan" parameterType="Map" resultType="com.fintecher.manage.vo.SupplierLoanRecordModel">
+		SELECT
+		loan.id AS id,
+		supplier.id as supplierId,
+		supplier.supplier_name AS supplierName,
+		loan_type AS loanType,
+		loan_money AS loanMoney,
+		loan_date AS loanDate,
+		has_invoice AS hasInvoice,
+		has_receipt AS hasReceipt,
+		file_url AS fileUrl,
+		loan.operator AS operator,
+		loan.operator_time AS operatorTime
+		FROM
+		finance_loan loan
+		LEFT JOIN basic_supplier supplier ON supplier.id = loan.supplier_id
+		LEFT JOIN sys_org org ON loan.org_id = org.id
+		WHERE
+		loan.loan_type = #{loanType}
+		<foreach collection="dataAuth" item="item" open="AND (" close=")" separator="OR">
+			org.org_tree_code LIKE CONCAT(#{item}, '%')
+		</foreach>
+		<foreach collection="exceptDataAuth" item="item" open="AND (" close=")" separator="AND">
+			org.org_tree_code NOT LIKE CONCAT(#{item}, '%')
+		</foreach>
+		<if test="supplierId != null and supplierId != ''">
+                AND supplier.id = #{supplierId}
+		</if>
+        <if test="hasInvoice != null and hasInvoice !=''">
+            AND loan.has_Invoice = #{hasInvoice}
+        </if>
+    </select>
+
+</mapper>

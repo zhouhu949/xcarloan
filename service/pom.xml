@@ -12,14 +12,10 @@
     <modules>
         <module>common</module>
         <module>file</module>
-        <module>message</module>
         <module>manage</module>
-        <module>report</module>
-        <module>generator</module>
-        <module>contract</module>
-        <module>sims</module>
+        <module>task</module>
+        <module>thirdparty</module>
     </modules>
-
 
     <artifactId>xc-service</artifactId>
     <name>${project.artifactId}</name>
